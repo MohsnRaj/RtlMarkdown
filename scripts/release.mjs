@@ -15,11 +15,13 @@ const changelogPath = path.join(rootDir, 'CHANGELOG.md');
 
 function run(cmd, options = {}) {
   try {
-    return execSync(cmd, { stdio: 'pipe', encoding: 'utf-8', ...options }).trim();
+    const result = execSync(cmd, { stdio: 'pipe', encoding: 'utf-8', ...options });
+    return typeof result === 'string' ? result.trim() : (result ? result.toString().trim() : '');
   } catch (error) {
     if (options.allowError) return null;
-    console.error(`\n❌ دستور با خطا مواجه شد: ${cmd}`);
+    console.error(`\n❌ Command failed: ${cmd}`);
     if (error.stderr) console.error(error.stderr);
+    else if (error.message) console.error(error.message);
     process.exit(1);
   }
 }
@@ -27,7 +29,7 @@ function run(cmd, options = {}) {
 function parseSemVer(version) {
   const parts = version.replace(/^v/, '').split('.').map(Number);
   if (parts.length !== 3 || parts.some(isNaN)) {
-    throw new Error(`نسخه نامعتبر: ${version}`);
+    throw new Error(`Invalid version format: ${version}`);
   }
   return { major: parts[0], minor: parts[1], patch: parts[2] };
 }
@@ -38,7 +40,7 @@ function bumpVersion(currentVersion, type) {
   if (type === 'minor') return `${major}.${minor + 1}.0`;
   if (type === 'patch') return `${major}.${minor}.${patch + 1}`;
   if (/^\d+\.\d+\.\d+/.test(type)) return type.replace(/^v/, '');
-  throw new Error(`نوع افزایش نسخه نامعتبر است: ${type}`);
+  throw new Error(`Invalid bump type: ${type}`);
 }
 
 function detectBumpType(commitLines) {
@@ -53,45 +55,45 @@ function detectBumpType(commitLines) {
     }
   }
 
-  if (hasBreaking) return { type: 'major', reason: 'وجود تغییرات بنیادین (Breaking Change)' };
-  if (hasFeat) return { type: 'minor', reason: 'افزوده شدن ویژگی جدید (feat)' };
-  return { type: 'patch', reason: 'رفع باگ یا تغییرات نگهداری (fix/chore)' };
+  if (hasBreaking) return { type: 'major', reason: 'Breaking changes detected' };
+  if (hasFeat) return { type: 'minor', reason: 'New feature detected (feat)' };
+  return { type: 'patch', reason: 'Bug fixes or maintenance updates (fix/chore)' };
 }
 
 async function main() {
-  console.log('\n🌟 استودیو RTL Markdown - سیستم خودکار نسخه‌گذاری و انتشار (Release Controller)');
+  console.log('\n🌟 RTL Markdown Studio - Automated Release & Version Controller');
   console.log('===============================================================================\n');
 
   if (!fs.existsSync(pkgPath)) {
-    console.error('❌ فایل package.json یافت نشد!');
+    console.error('❌ package.json not found!');
     process.exit(1);
   }
 
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
   const currentVersion = pkg.version || '1.0.0';
 
-  // 1. بررسی وضعیت Git
+  // 1. Check Git status
   const status = run('git status --porcelain');
   if (status) {
-    console.log('📦 ثبت خودکار تغییرات باز پیش از انتشار...');
+    console.log('📦 Staging and committing working changes prior to release...');
     run('git add -A');
     run('git commit -m "chore: pre-release automatic commit"');
   }
 
-  // 2. واکشی آخرین تگ و بررسی کامیت‌های جدید
+  // 2. Fetch latest tag and analyze recent commits
   const lastTag = run('git describe --tags --abbrev=0', { allowError: true });
   const logRange = lastTag ? `${lastTag}..HEAD` : 'HEAD';
   const rawCommits = run(`git log ${logRange} --pretty=format:"%s (%h)"`, { allowError: true }) || '';
   const commitLines = rawCommits.split('\n').filter(Boolean);
 
   let targetType = process.argv[2];
-  let reason = 'تعیین دستی توسط آرگومان ورودی';
+  let reason = 'Explicitly passed via CLI argument';
 
   if (!targetType) {
     if (commitLines.length === 0) {
-      console.log('ℹ️  هیچ کامیت جدیدی از آخرین تگ یافت نشد. به صورت خودکار patch اعمال می‌شود.');
+      console.log('ℹ️  No new commits since last release tag. Defaulting to patch bump.');
       targetType = 'patch';
-      reason = 'پیش‌فرض (patch)';
+      reason = 'Default (patch)';
     } else {
       const detected = detectBumpType(commitLines);
       targetType = detected.type;
@@ -102,18 +104,18 @@ async function main() {
   const newVersion = bumpVersion(currentVersion, targetType);
   const tag = `v${newVersion}`;
 
-  console.log(`📌 آخرین نسخه: v${currentVersion}`);
-  console.log(`🔍 تحلیل خودکار کامیت‌ها: ${reason}`);
-  console.log(`🚀 نسخه جدید محاسبه‌شده: ${tag} (${targetType})\n`);
+  console.log(`📌 Current version: v${currentVersion}`);
+  console.log(`🔍 Commit analysis: ${reason}`);
+  console.log(`🚀 Next calculated version: ${tag} (${targetType})\n`);
 
-  // 3. اعتبارسنجی Typecheck، Tests و Build
-  console.log('⚙️  در حال بررسی تایپ‌ها، اجرای تست‌ها و تست ساخت (Typecheck, Test & Build)...');
+  // 3. Verification: Typecheck, Test, and Build
+  console.log('⚙️  Running verification suite (Typecheck, Test & Build)...');
   run('pnpm exec tsc --noEmit', { stdio: 'inherit' });
   run('pnpm run test', { stdio: 'inherit' });
   run('pnpm run build', { stdio: 'inherit' });
-  console.log('✅ تمامی تست‌ها و تست ساخت با موفقیت تایید شدند.');
+  console.log('✅ All verification checks (Typecheck, Test & Build) passed successfully.');
 
-  // 4. دسته‌بندی کامیت‌ها برای گزارش تغییرات (CHANGELOG)
+  // 4. Categorize commits for CHANGELOG.md
   const features = [];
   const fixes = [];
   const others = [];
@@ -128,24 +130,24 @@ async function main() {
   let changelogEntry = `\n## [${tag}] - ${dateStr}\n\n`;
 
   if (features.length) {
-    changelogEntry += `### 🚀 ویژگی‌های جدید (Features)\n${features.map((c) => `- ${c}`).join('\n')}\n\n`;
+    changelogEntry += `### 🚀 Features\n${features.map((c) => `- ${c}`).join('\n')}\n\n`;
   }
   if (fixes.length) {
-    changelogEntry += `### 🐛 رفع اشکالات (Bug Fixes)\n${fixes.map((c) => `- ${c}`).join('\n')}\n\n`;
+    changelogEntry += `### 🐛 Bug Fixes\n${fixes.map((c) => `- ${c}`).join('\n')}\n\n`;
   }
   if (others.length) {
-    changelogEntry += `### 🛠️ بهبودها و تغییرات فنی\n${others.map((c) => `- ${c}`).join('\n')}\n\n`;
+    changelogEntry += `### 🛠️ Improvements & Maintenance\n${others.map((c) => `- ${c}`).join('\n')}\n\n`;
   }
   if (!features.length && !fixes.length && !others.length) {
-    changelogEntry += `- انتشار نسخه ${tag}\n\n`;
+    changelogEntry += `- Release ${tag}\n\n`;
   }
 
-  // 5. بروزرسانی CHANGELOG.md
+  // 5. Update CHANGELOG.md
   let currentChangelog = '';
   if (fs.existsSync(changelogPath)) {
     currentChangelog = fs.readFileSync(changelogPath, 'utf8');
   } else {
-    currentChangelog = `# گزارش تغییرات (Changelog)\n\nتمام تغییرات **RTL Markdown Studio** در این فایل مستند می‌شود.\n`;
+    currentChangelog = `# Changelog\n\nAll notable changes to **RTL Markdown Studio** are documented in this file.\n`;
   }
 
   const headerIndex = currentChangelog.indexOf('## [');
@@ -157,27 +159,27 @@ async function main() {
   }
 
   fs.writeFileSync(changelogPath, updatedChangelog, 'utf8');
-  console.log('📝 فایل CHANGELOG.md بروزرسانی شد.');
+  console.log('📝 CHANGELOG.md updated successfully.');
 
-  // 6. بروزرسانی نسخه در package.json
+  // 6. Update version in package.json
   pkg.version = newVersion;
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
-  console.log(`📦 شماره نسخه در package.json به ${newVersion} تغییر یافت.`);
+  console.log(`📦 package.json version updated to ${newVersion}.`);
 
-  // 7. ثبت کامیت انتشار و ایجاد تگ Git
+  // 7. Commit release files and create Git tag
   run(`git add package.json CHANGELOG.md`);
   run(`git commit -m "chore(release): ${tag}"`);
   run(`git tag -a ${tag} -m "Release ${tag}"`);
-  console.log(`🏷️  تگ گیت ایجاد شد: ${tag}`);
+  console.log(`🏷️  Git release tag created: ${tag}`);
 
   console.log('\n===============================================================================');
-  console.log(`🎉 نسخه جدید ${tag} با موفقیت آماده و تگ شد!`);
+  console.log(`🎉 New release ${tag} is ready and tagged!`);
   console.log('===============================================================================\n');
-  console.log('برای ارسال تغییرات و تگ‌ها به گیت‌هاب کافیست دستور زیر را اجرا کنید:');
+  console.log('To publish changes and tags to GitHub, run:');
   console.log(`\n    git push origin main --tags\n`);
 }
 
 main().catch((err) => {
-  console.error('\n❌ عملیات انتشار با خطا مواجه شد:', err);
+  console.error('\n❌ Release process failed:', err);
   process.exit(1);
 });
