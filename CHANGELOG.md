@@ -3,6 +3,22 @@
 All notable changes to **RTL Markdown Studio** will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.1.0] - 2026-09-24
+
+### 🚀 Features
+- feat(bidi): implement bidirectional script detection, English sentence auto-alignment, and test suite (17162da)
+- feat(ui): disable nextjs development indicator badge (844a5d9)
+- feat(ci): add github pages automated deployment and live web link (9c1f084)
+- feat(dx): support commit-driven semver bump and add issue templates (f80001d)
+
+### 🐛 Bug Fixes
+- fix(ci): pin pnpm 10 and upgrade node to 22 in github workflows (d76435e)
+
+### 🛠️ Improvements & Maintenance
+- docs: streamline readme content and update maintainer perspective (9bf98a4)
+- chore(dx): configure peer engineering guidelines across antigravity, codex, and cursor (2bc159a)
+- chore(license): set the developer fullname (3ff0426)
+
 ## [v1.0.0] - 2026-09-24
 
 ### 🚀 Features
