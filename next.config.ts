@@ -1,7 +1,17 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
+
+const isGithubPages =
+  process.env.DEPLOY_TARGET === 'gh-pages' ||
+  process.env.GITHUB_PAGES === 'true' ||
+  process.env.CI === 'true';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: 'export',
+  basePath: isGithubPages ? '/RtlMarkdown' : '',
+  assetPrefix: isGithubPages ? '/RtlMarkdown/' : undefined,
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;

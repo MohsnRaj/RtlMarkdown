@@ -9,6 +9,7 @@
 
 [![آخرین نسخه](https://img.shields.io/github/v/release/MohsnRaj/RtlMarkdown?color=blue&label=%D9%86%D8%B3%D8%AE%D9%87%20%D9%85%D9%86%D8%AA%D8%B4%D8%B1%20%D8%B4%D8%AF%D9%87&logo=github)](https://github.com/MohsnRaj/RtlMarkdown/releases)
 [![مشاهده ریلیزها](https://img.shields.io/badge/%D8%AF%D8%A7%D9%86%D9%84%D9%88%D8%AF%20%D8%B1%DB%8C%D9%84%DB%8C%D8%B2%D9%87%D8%A7-Releases-blueviolet?logo=github)](https://github.com/MohsnRaj/RtlMarkdown/releases)
+[![دموی آنلاین](https://img.shields.io/badge/%D8%AF%D9%85%D9%88%DB%8C%20%D8%B2%D9%86%D8%AF%D9%87%20%D8%A2%D9%86%D9%84%D8%A7%DB%8C%D9%86-Live%20Demo-2ea44f?logo=googlechrome&logoColor=white)](https://mohsnraj.github.io/RtlMarkdown)
 [![Next.js](https://img.shields.io/badge/Next.js-16.3-black?logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2-61dafb?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript)](https://www.typescriptlang.org/)
@@ -75,7 +76,10 @@
 
 ## 🛠️ نصب و اجرای سریع
 
-خیلی ساده پروژه رو کلون و اجرا کنید:
+> 💡 **استفاده آنلاین بدون نیاز به نصب**: می‌توانید این استودیو را مستقیماً در مرورگر باز کنید:  
+> 👉 **[ورود به استودیو آنلاین RTL Markdown](https://mohsnraj.github.io/RtlMarkdown)**
+
+اگر مایلید پروژه را به صورت محلی (لوکال) روی سیستم خود بالا بیاورید:
 
 ```bash
 # ۱. دریافت ریپازیتوری

@@ -4,7 +4,7 @@
   "description": "Professional RTL (Right-to-Left) Markdown Studio & Renderer with KaTeX LaTeX math and Mermaid diagram bidirectional isolation",
   "author": "Mohsen Rajabpour (Rivneez)",
   "license": "MIT",
-  "homepage": "https://github.com/MohsnRaj/RtlMarkdown#readme",
+  "homepage": "https://mohsnraj.github.io/RtlMarkdown",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MohsnRaj/RtlMarkdown.git"

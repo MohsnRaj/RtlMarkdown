@@ -39,6 +39,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: Release ${{ github.ref_name }}
+          body: |
+            ## 🌐 وبسایت و دموی زنده آنلاین (Live Web App)
+            شما می‌توانید این استودیو را به صورت آنلاین و بدون نیاز به نصب روی مرورگر خود تجربه کنید:
+            👉 **[https://mohsnraj.github.io/RtlMarkdown](https://mohsnraj.github.io/RtlMarkdown)**
+
+            ---
           generate_release_notes: true
           draft: false
           prerelease: false
