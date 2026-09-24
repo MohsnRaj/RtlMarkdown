@@ -3,6 +3,11 @@
 All notable changes to **RTL Markdown Studio** will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.2.0] - 2026-09-24
+
+### 🚀 Features
+- feat(release): automate git push of commits and tags during release (acd9aae)
+
 ## [v1.1.0] - 2026-09-24
 
 ### 🚀 Features
