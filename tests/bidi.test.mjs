@@ -94,6 +94,17 @@ describe('BiDi Utility Engine Tests', () => {
       assert.equal(detectDirection('React is a declarative library for building user interfaces (توسعه وب)'), 'ltr');
       assert.equal(isPredominantlyLtr('React is a declarative library for building user interfaces (توسعه وب)'), true);
     });
+
+    it('identifies mixed Persian questions starting with English technical terms as RTL', () => {
+      assert.equal(detectDirection('feature چیست؟'), 'rtl');
+      assert.equal(isPredominantlyRtl('feature چیست؟'), true);
+      assert.equal(isPredominantlyLtr('feature چیست؟'), false);
+
+      assert.equal(detectDirection('Docker چیست؟'), 'rtl');
+      assert.equal(detectDirection('Overfitting چیست؟'), 'rtl');
+      assert.equal(detectDirection('Convolutional Neural Network چیست؟'), 'rtl');
+      assert.equal(detectDirection('Generative Pre-trained Transformer چیست؟'), 'rtl');
+    });
   });
 
   describe('getFirstStrongDirection', () => {
@@ -232,6 +243,15 @@ describe('RtlMarkdown BiDi Rendering Tests', () => {
     const html = renderMarkdown(md);
 
     assert.match(html, /<h1[^>]*dir="rtl"[^>]*class="[^"]*bidi-rtl-block[^"]*"/);
+  });
+
+  it('renders Persian headings starting with an English technical term as RTL with isolated inline term', () => {
+    const md = '### feature چیست؟';
+    const html = renderMarkdown(md);
+
+    assert.match(html, /<h3[^>]*dir="rtl"[^>]*class="[^"]*bidi-rtl-block[^"]*"/);
+    assert.match(html, /<bdi[^>]*dir="ltr"[^>]*class="[^"]*bidi-ltr-isolate[^"]*"[^>]*>feature<\/bdi>/);
+    assert.match(html, /چیست؟/);
   });
 
   it('renders English list items as LTR blocks and Persian as RTL blocks', () => {

@@ -63,7 +63,15 @@ export function hasLatinCharacters(text: string): boolean {
 }
 
 /**
- * Detects the overall predominant direction of the text based on character counts.
+ * Detects the overall predominant direction of the text.
+ *
+ * Persian/Arabic scripts carry decisive structural weight because Perso-Arabic orthography
+ * omits short vowels (making Persian words concise), whereas English technical terms and loanwords
+ * are often long (e.g. 'feature', 'Transformer', 'Overfitting', 'Convolutional Neural Network').
+ *
+ * Sentences or headings that contain core Persian words (outside secondary parenthetical notes)
+ * are intrinsically RTL. An English sentence with a secondary parenthetical Persian gloss
+ * (e.g. 'React is a library (توسعه وب)') remains LTR.
  */
 export function detectDirection(text: string): Direction {
   const rtlMatches = text.match(RTL_REGEX_GLOBAL) || [];
@@ -73,7 +81,28 @@ export function detectDirection(text: string): Direction {
     return 'neutral';
   }
 
-  return latinMatches.length > rtlMatches.length ? 'ltr' : 'rtl';
+  // Pure Latin / LTR
+  if (rtlMatches.length === 0) {
+    return 'ltr';
+  }
+
+  // Pure RTL
+  if (latinMatches.length === 0) {
+    return 'rtl';
+  }
+
+  // Check primary text excluding secondary parenthetical notes/glosses (e.g. '(توسعه وب)')
+  const textWithoutParentheses = text.replace(/\([^)]*\)|\[[^\]]*\]/g, '').trim();
+
+  // If after stripping parenthetical notes there are no RTL characters left,
+  // the core text is genuinely English/LTR
+  if (!hasRtlCharacters(textWithoutParentheses) && hasLatinCharacters(textWithoutParentheses)) {
+    return 'ltr';
+  }
+
+  // When primary text contains Persian words outside parentheses,
+  // it is intrinsically RTL regardless of how many characters the English loanwords have.
+  return 'rtl';
 }
 
 /**
