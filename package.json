@@ -34,6 +34,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test": "tsc src/lib/bidi.ts --outDir tests/dist --module es2022 --target es2022 --moduleResolution node && node --test tests/",
     "release": "node scripts/release.mjs",
     "release:patch": "node scripts/release.mjs patch",
     "release:minor": "node scripts/release.mjs minor",

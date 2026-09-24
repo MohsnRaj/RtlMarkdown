@@ -31,6 +31,12 @@ You are collaborating on this project as a **Senior Peer Software Engineer**, no
   - Bad: `docs: add humanized Persian README as requested by user`
 
 ### 3. Project Architecture Principles
-- **BiDi Isolation**: Never allow RTL text to leak into LaTeX equations (`KaTeX`), inline code, code blocks, or SVG diagrams (`Mermaid.js`). Always wrap mixed-direction content in strict `unicode-bidi: isolate; direction: ltr;`.
+- **BiDi Isolation & Mixed-Text Engine**:
+  - **Block-Level English Alignment**: Any block element (`p`, `h1`-`h6`, `li`, `blockquote`) starting with Latin script and predominantly LTR must be automatically set to `dir="ltr"` with `bidi-ltr-block` (`direction: ltr !important; text-align: left !important;`).
+  - **Standalone English Lines in Paragraphs**: Standalone English sentence lines within multi-line paragraphs must be wrapped in `<span dir="ltr" class="bidi-ltr-line">` (`display: block; direction: ltr; text-align: left; unicode-bidi: isolate;`), keeping surrounding Persian lines right-aligned while cleanly left-aligning the English sentence.
+  - **Inline Sentence & Punctuation Isolation**: Embedded English sentences, phrases, and technical codes within Persian text must be wrapped in `<bdi dir="ltr" class="bidi-ltr-isolate">`, keeping trailing punctuation (`.`, `!`, `?`, `)`) within the LTR run to eliminate the Unicode BiDi punctuation flip.
+  - **Strict Math & Code Isolation**: LaTeX equations (`KaTeX`), inline code, code blocks, and SVG diagrams (`Mermaid.js`) must never have RTL text leak into them. Always enforce `unicode-bidi: isolate; direction: ltr;`.
 - **CSS Logical Properties**: Always use `border-inline-start`, `padding-inline-start`, and `margin-inline-start` instead of physical `left`/`right` properties to support both RTL and LTR seamlessly.
-- **Code Quality**: Ensure zero TypeScript errors (`pnpm typecheck`) and zero build warnings (`pnpm build`) before concluding any task.
+- **Code Quality & Testing**:
+  - Run `pnpm test` to verify bidirectional tokenizer, script detection, and end-to-end markdown rendering tests.
+  - Ensure zero TypeScript errors (`pnpm typecheck`) and zero build warnings (`pnpm build`) before concluding any task.

@@ -18,5 +18,6 @@ alwaysApply: true
 
 ## Architecture & Code Standards
 - Strict BiDi isolation for mixed RTL/LTR content (`unicode-bidi: isolate; direction: ltr;`).
+- Automatic left-alignment for English blocks (`bidi-ltr-block`), standalone paragraph lines (`bidi-ltr-line`), and punctuation-isolated inline spans (`bidi-ltr-isolate`).
 - CSS logical properties for layout spacing and borders.
-- Always ensure `pnpm typecheck` and `pnpm build` pass with zero errors.
+- Always ensure `pnpm test`, `pnpm typecheck`, and `pnpm build` pass with zero errors.

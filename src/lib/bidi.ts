@@ -144,7 +144,6 @@ export function tokenizeBiDiText(text: string): BiDiToken[] {
   while ((match = NON_RTL_REGEX_GLOBAL.exec(text)) !== null) {
     const rawChunk = match[0];
     const matchStart = match.index;
-    const matchEnd = matchStart + rawChunk.length;
 
     if (hasLatinCharacters(rawChunk)) {
       // Keep internal spaces and punctuation, but isolate boundary whitespace
@@ -249,11 +248,16 @@ export function rehypeBidi(options: RehypeBidiOptions = {}) {
         const fullText = getNodeText(node);
         node.properties = node.properties || {};
 
-        if (isPredominantlyLtr(fullText)) {
+        const firstStrong = getFirstStrongDirection(fullText);
+        const isLtrBlock = firstStrong === 'ltr' && isPredominantlyLtr(fullText);
+
+        if (isLtrBlock) {
           node.properties.dir = 'ltr';
           const existing = node.properties.className || [];
           const classes = Array.isArray(existing) ? existing : [existing];
           node.properties.className = [...classes, 'bidi-ltr-block'];
+          // Whole block is already LTR; no need to isolate inner text runs
+          return;
         } else if (baseDirection === 'rtl') {
           node.properties.dir = 'rtl';
           const existing = node.properties.className || [];

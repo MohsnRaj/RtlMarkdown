@@ -11,5 +11,6 @@
 
 ## Technical Standards
 - BiDi Isolation: Enforce `unicode-bidi: isolate; direction: ltr;` on all math expressions, code blocks, and SVG diagrams in RTL markdown documents.
+- English Sentence Auto-Alignment: Automatically format English blocks (`bidi-ltr-block`), standalone paragraph lines (`bidi-ltr-line`), and isolated inline sentences (`bidi-ltr-isolate`) to prevent BiDi layout and punctuation scramble.
 - CSS: Use CSS logical properties (`margin-inline-*`, `padding-inline-*`, `border-inline-*`).
-- Quality: Verify typecheck and production build with `pnpm typecheck` and `pnpm build`.
+- Quality: Verify tests, typecheck, and production build with `pnpm test`, `pnpm typecheck`, and `pnpm build`.

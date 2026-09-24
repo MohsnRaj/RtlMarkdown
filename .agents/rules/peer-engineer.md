@@ -16,5 +16,5 @@ always_on: true
 - Keep messages crisp, professional, and developer-first.
 
 ## 3. Engineering Rigor
-- Ensure code passes typechecks and builds without errors.
-- Preserve strict bidirectional (BiDi) isolation across mathematical equations, code blocks, and diagrams in RTL markdown.
+- Ensure code passes tests (`pnpm test`), typechecks (`pnpm typecheck`), and builds (`pnpm build`) without errors.
+- Preserve strict bidirectional (BiDi) isolation across mathematical equations, code blocks, diagrams, and English sentences/blocks embedded in RTL markdown.

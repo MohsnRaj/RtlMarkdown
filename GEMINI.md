@@ -12,4 +12,5 @@
 
 ## Quality & Code Integrity
 - Maintain strict bidirectional isolation for RTL markdown, KaTeX formulas, and Mermaid diagrams.
-- Always run `pnpm typecheck` and `pnpm build` to verify code correctness before completing tasks.
+- Automatically left-align English blocks/sentences (`bidi-ltr-block`, `bidi-ltr-line`) and isolate inline phrases (`bidi-ltr-isolate`) to prevent BiDi punctuation scramble.
+- Always run `pnpm test`, `pnpm typecheck`, and `pnpm build` to verify code correctness before completing tasks.

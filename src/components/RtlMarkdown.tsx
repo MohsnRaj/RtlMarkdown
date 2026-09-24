@@ -178,15 +178,20 @@ export default function RtlMarkdown({
               {children}
             </li>
           ),
-          bdi: ({ children, className: elemClassName = '', dir = 'ltr', ...props }) => (
-            <bdi
-              dir={dir}
-              className={`bidi-ltr-isolate ${elemClassName}`}
-              {...props}
-            >
-              {children}
-            </bdi>
-          ),
+          bdi: ({ children, className: elemClassName = '', dir = 'ltr', ...props }) => {
+            const classes = elemClassName.includes('bidi-ltr-isolate')
+              ? elemClassName
+              : `bidi-ltr-isolate ${elemClassName}`.trim();
+            return (
+              <bdi
+                dir={dir}
+                className={classes}
+                {...props}
+              >
+                {children}
+              </bdi>
+            );
+          },
           table: ({ children, className: elemClassName = '', ...props }) => (
             <div className="my-6 w-full overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-800">
               <table className={`w-full border-collapse text-start text-sm ${elemClassName}`} {...props}>

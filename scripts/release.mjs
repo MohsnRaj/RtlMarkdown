@@ -106,11 +106,12 @@ async function main() {
   console.log(`🔍 تحلیل خودکار کامیت‌ها: ${reason}`);
   console.log(`🚀 نسخه جدید محاسبه‌شده: ${tag} (${targetType})\n`);
 
-  // 3. اعتبارسنجی Typecheck و Build
-  console.log('⚙️  در حال بررسی تایپ‌ها و تست ساخت (Typecheck & Build)...');
+  // 3. اعتبارسنجی Typecheck، Tests و Build
+  console.log('⚙️  در حال بررسی تایپ‌ها، اجرای تست‌ها و تست ساخت (Typecheck, Test & Build)...');
   run('pnpm exec tsc --noEmit', { stdio: 'inherit' });
+  run('pnpm run test', { stdio: 'inherit' });
   run('pnpm run build', { stdio: 'inherit' });
-  console.log('✅ تست ساخت با موفقیت تایید شد.');
+  console.log('✅ تمامی تست‌ها و تست ساخت با موفقیت تایید شدند.');
 
   // 4. دسته‌بندی کامیت‌ها برای گزارش تغییرات (CHANGELOG)
   const features = [];
