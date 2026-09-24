@@ -1,0 +1,68 @@
+{
+  "name": "rtl-markdown",
+  "version": "1.0.0",
+  "description": "Professional RTL (Right-to-Left) Markdown Studio & Renderer with KaTeX LaTeX math and Mermaid diagram bidirectional isolation",
+  "author": "Mohsen Rajabpour (Rivneez)",
+  "license": "MIT",
+  "homepage": "https://github.com/MohsnRaj/RtlMarkdown#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MohsnRaj/RtlMarkdown.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MohsnRaj/RtlMarkdown/issues"
+  },
+  "keywords": [
+    "markdown",
+    "rtl",
+    "persian",
+    "arabic",
+    "urdu",
+    "katex",
+    "latex",
+    "math",
+    "mermaid",
+    "charts",
+    "nextjs",
+    "react",
+    "bidi"
+  ],
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "release": "node scripts/release.mjs",
+    "release:patch": "node scripts/release.mjs patch",
+    "release:minor": "node scripts/release.mjs minor",
+    "release:major": "node scripts/release.mjs major"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "katex": "^0.18.9",
+    "lucide-react": "^1.48.0",
+    "mermaid": "^12.0.0",
+    "next": "16.3.6",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "tailwind-merge": "^3.7.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/katex": "^0.16.8",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
