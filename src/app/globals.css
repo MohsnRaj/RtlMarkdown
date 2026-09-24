@@ -170,3 +170,10 @@ body {
   }
 }
 
+/* Hide Next.js development indicator badge */
+[data-nextjs-dev-overlay],
+nextjs-portal,
+#nextjs-dev-tools,
+[data-nextjs-toast] {
+  display: none !important;
+}
