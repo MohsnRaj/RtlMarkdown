@@ -172,11 +172,19 @@ async function main() {
   run(`git tag -a ${tag} -m "Release ${tag}"`);
   console.log(`🏷️  Git release tag created: ${tag}`);
 
+  // 8. Push commits and tags to remote repository
+  console.log('🚀 Pushing commits and release tags to remote (origin main --tags)...');
+  const pushSuccess = run('git push origin main --tags', { stdio: 'inherit', allowError: true });
+
   console.log('\n===============================================================================');
-  console.log(`🎉 New release ${tag} is ready and tagged!`);
+  if (pushSuccess !== null) {
+    console.log(`🎉 Release ${tag} successfully prepared, tagged, and published to GitHub!`);
+  } else {
+    console.log(`⚠️  Release ${tag} tagged locally, but remote push did not succeed.`);
+    console.log('You can push manually whenever ready using:');
+    console.log(`\n    git push origin main --tags\n`);
+  }
   console.log('===============================================================================\n');
-  console.log('To publish changes and tags to GitHub, run:');
-  console.log(`\n    git push origin main --tags\n`);
 }
 
 main().catch((err) => {
