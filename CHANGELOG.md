@@ -3,6 +3,11 @@
 All notable changes to **RTL Markdown Studio** will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.2.1] - 2026-09-24
+
+### 🐛 Bug Fixes
+- fix(bidi): prioritize primary RTL script to prevent false LTR block alignment (0cdcad4)
+
 ## [v1.2.0] - 2026-09-24
 
 ### 🚀 Features
