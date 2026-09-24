@@ -52,3 +52,121 @@ body {
 .rtl-markdown-prose {
   word-break: break-word;
 }
+
+/* Strict BiDi Isolation & Left-Alignment Rules for English Text */
+.bidi-ltr-block {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate !important;
+}
+
+.bidi-rtl-block {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: isolate;
+}
+
+.bidi-ltr-line {
+  display: block;
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate !important;
+  margin-block: 0.35rem;
+}
+
+.bidi-ltr-isolate {
+  direction: ltr !important;
+  unicode-bidi: isolate !important;
+  text-align: left;
+}
+
+/* Print / PDF Export Styling */
+@media print {
+  @page {
+    margin: 15mm 18mm;
+    size: A4 portrait;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    font-size: 11pt !important;
+  }
+
+  /* Hide editor, toolbar, navigation, and floating badges */
+  header,
+  #editor-pane,
+  .no-print,
+  .quick-insertion-toolbar,
+  .drop-overlay,
+  .notification-toast {
+    display: none !important;
+  }
+
+  #main-workspace {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  #preview-pane {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+  }
+
+  #preview-header {
+    display: none !important;
+  }
+
+  #preview-content {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Prevent page breaks inside critical elements */
+  pre,
+  blockquote,
+  table,
+  tr,
+  img,
+  figure,
+  .katex-display,
+  .mermaid-chart-card,
+  .code-block-card {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  /* Prevent code horizontal overflow cutting in print */
+  pre {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+  }
+
+  a {
+    text-decoration: underline !important;
+  }
+}
+

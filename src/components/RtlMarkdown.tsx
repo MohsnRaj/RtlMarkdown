@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
+import rehypeBidi from '@/lib/bidi';
 import MermaidChart from './MermaidChart';
 import { Check, Copy } from 'lucide-react';
 
@@ -25,13 +26,13 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   };
 
   return (
-    <div className="group relative my-4 overflow-hidden rounded-xl border border-neutral-200 bg-neutral-900 text-neutral-100 shadow-sm dark:border-neutral-800">
+    <div className="code-block-card group relative my-4 overflow-hidden rounded-xl border border-neutral-200 bg-neutral-900 text-neutral-100 shadow-sm dark:border-neutral-800">
       <div className="flex items-center justify-between border-b border-neutral-800 bg-neutral-950/70 px-4 py-1.5 text-xs text-neutral-400">
         <span className="font-mono lowercase">{language || 'text'}</span>
         <button
           onClick={handleCopy}
           type="button"
-          className="flex items-center gap-1 rounded px-2 py-0.5 text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-200"
+          className="no-print flex items-center gap-1 rounded px-2 py-0.5 text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-200"
           title="کپی کد"
         >
           {copied ? (
@@ -68,6 +69,7 @@ export default function RtlMarkdown({
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[
           rehypeRaw,
+          [rehypeBidi, { baseDirection: direction }],
           [
             rehypeKatex,
             {
@@ -104,66 +106,125 @@ export default function RtlMarkdown({
 
             return <CodeBlock language={language} code={codeString} />;
           },
-          h1: ({ children }) => (
-            <h1 className="mt-8 mb-4 border-b border-neutral-200 pb-2 text-2xl font-bold tracking-tight text-neutral-900 dark:border-neutral-800 dark:text-neutral-100">
+          h1: ({ children, className: elemClassName = '', dir, ...props }) => (
+            <h1
+              dir={dir}
+              className={`mt-8 mb-4 border-b border-neutral-200 pb-2 text-2xl font-bold tracking-tight text-neutral-900 dark:border-neutral-800 dark:text-neutral-100 ${elemClassName}`}
+              {...props}
+            >
               {children}
             </h1>
           ),
-          h2: ({ children }) => (
-            <h2 className="mt-6 mb-3 text-xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
+          h2: ({ children, className: elemClassName = '', dir, ...props }) => (
+            <h2
+              dir={dir}
+              className={`mt-6 mb-3 text-xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100 ${elemClassName}`}
+              {...props}
+            >
               {children}
             </h2>
           ),
-          h3: ({ children }) => (
-            <h3 className="mt-5 mb-2 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+          h3: ({ children, className: elemClassName = '', dir, ...props }) => (
+            <h3
+              dir={dir}
+              className={`mt-5 mb-2 text-lg font-semibold text-neutral-900 dark:text-neutral-100 ${elemClassName}`}
+              {...props}
+            >
               {children}
             </h3>
           ),
-          p: ({ children }) => (
-            <p className="my-3 text-[15px] leading-8 [text-align:inherit]">{children}</p>
+          p: ({ children, className: elemClassName = '', dir, ...props }) => (
+            <p
+              dir={dir}
+              className={`my-3 text-[15px] leading-8 ${elemClassName}`}
+              {...props}
+            >
+              {children}
+            </p>
           ),
-          blockquote: ({ children }) => (
-            <blockquote className="my-4 rounded-s-lg border-s-4 border-blue-500 bg-blue-50/50 py-2.5 pe-4 ps-4 text-neutral-700 italic dark:border-blue-400 dark:bg-blue-950/20 dark:text-neutral-300">
+          blockquote: ({ children, className: elemClassName = '', dir, ...props }) => (
+            <blockquote
+              dir={dir}
+              className={`my-4 rounded-s-lg border-s-4 border-blue-500 bg-blue-50/50 py-2.5 pe-4 ps-4 text-neutral-700 italic dark:border-blue-400 dark:bg-blue-950/20 dark:text-neutral-300 ${elemClassName}`}
+              {...props}
+            >
               {children}
             </blockquote>
           ),
-          ul: ({ children }) => (
-            <ul className="my-3 list-disc space-y-1.5 ps-6 text-[15px] marker:text-neutral-400">
+          ul: ({ children, className: elemClassName = '', dir, ...props }) => (
+            <ul
+              dir={dir}
+              className={`my-3 list-disc space-y-1.5 ps-6 text-[15px] marker:text-neutral-400 ${elemClassName}`}
+              {...props}
+            >
               {children}
             </ul>
           ),
-          ol: ({ children }) => (
-            <ol className="my-3 list-decimal space-y-1.5 ps-6 text-[15px] marker:text-neutral-400">
+          ol: ({ children, className: elemClassName = '', dir, ...props }) => (
+            <ol
+              dir={dir}
+              className={`my-3 list-decimal space-y-1.5 ps-6 text-[15px] marker:text-neutral-400 ${elemClassName}`}
+              {...props}
+            >
               {children}
             </ol>
           ),
-          li: ({ children }) => <li className="leading-7">{children}</li>,
-          table: ({ children }) => (
+          li: ({ children, className: elemClassName = '', dir, ...props }) => (
+            <li
+              dir={dir}
+              className={`leading-7 ${elemClassName}`}
+              {...props}
+            >
+              {children}
+            </li>
+          ),
+          bdi: ({ children, className: elemClassName = '', dir = 'ltr', ...props }) => (
+            <bdi
+              dir={dir}
+              className={`bidi-ltr-isolate ${elemClassName}`}
+              {...props}
+            >
+              {children}
+            </bdi>
+          ),
+          table: ({ children, className: elemClassName = '', ...props }) => (
             <div className="my-6 w-full overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-800">
-              <table className="w-full border-collapse text-right text-sm">{children}</table>
+              <table className={`w-full border-collapse text-start text-sm ${elemClassName}`} {...props}>
+                {children}
+              </table>
             </div>
           ),
-          thead: ({ children }) => (
-            <thead className="border-b border-neutral-200 bg-neutral-100/75 dark:border-neutral-800 dark:bg-neutral-900/60">
+          thead: ({ children, className: elemClassName = '', ...props }) => (
+            <thead
+              className={`border-b border-neutral-200 bg-neutral-100/75 dark:border-neutral-800 dark:bg-neutral-900/60 ${elemClassName}`}
+              {...props}
+            >
               {children}
             </thead>
           ),
-          th: ({ children }) => (
-            <th className="px-4 py-2.5 font-semibold text-neutral-900 dark:text-neutral-100">
+          th: ({ children, className: elemClassName = '', ...props }) => (
+            <th
+              className={`px-4 py-2.5 font-semibold text-neutral-900 dark:text-neutral-100 ${elemClassName}`}
+              {...props}
+            >
               {children}
             </th>
           ),
-          td: ({ children }) => (
-            <td className="border-b border-neutral-100 px-4 py-2.5 text-neutral-700 last:border-0 dark:border-neutral-800/60 dark:text-neutral-300">
+          td: ({ children, className: elemClassName = '', ...props }) => (
+            <td
+              className={`border-b border-neutral-100 px-4 py-2.5 text-neutral-700 last:border-0 dark:border-neutral-800/60 dark:text-neutral-300 ${elemClassName}`}
+              {...props}
+            >
               {children}
             </td>
           ),
-          a: ({ href, children }) => (
+          a: ({ href, children, className: elemClassName = '', ...props }) => (
             <a
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 underline decoration-blue-400/50 underline-offset-4 transition hover:text-blue-700 hover:decoration-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+              className={`text-blue-600 underline decoration-blue-400/50 underline-offset-4 transition hover:text-blue-700 hover:decoration-blue-600 dark:text-blue-400 dark:hover:text-blue-300 ${elemClassName}`}
+              {...props}
             >
               {children}
             </a>

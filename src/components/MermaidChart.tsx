@@ -83,8 +83,8 @@ export default function MermaidChart({ chart }: MermaidChartProps) {
   }
 
   return (
-    <div className="group relative my-6 rounded-2xl border border-neutral-200/80 bg-neutral-50/50 p-4 transition-all hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900/40">
-      <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+    <div className="mermaid-chart-card group relative my-6 rounded-2xl border border-neutral-200/80 bg-neutral-50/50 p-4 transition-all hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900/40">
+      <div className="no-print absolute top-3 start-3 z-10 flex items-center gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
         <button
           onClick={handleCopy}
           type="button"
