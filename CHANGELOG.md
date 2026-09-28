@@ -3,6 +3,11 @@
 All notable changes to **RTL Markdown Studio** will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.2.2] - 2026-09-28
+
+### 🐛 Bug Fixes
+- fix(bidi): enforce LTR layout on technical and numeric list containers (8e8cc0f)
+
 ## [v1.2.1] - 2026-09-24
 
 ### 🐛 Bug Fixes
