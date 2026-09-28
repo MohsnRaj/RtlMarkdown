@@ -133,12 +133,36 @@ export function isPredominantlyRtl(text: string): boolean {
 
 /**
  * Checks whether a single line of text represents a standalone LTR sentence or block.
- * A line is considered an LTR sentence if it has Latin characters and zero RTL characters.
+ * A line is considered an LTR sentence if it has Latin characters or numbers/symbols,
+ * and zero RTL characters.
  */
 export function isLtrLine(line: string): boolean {
   const trimmed = line.trim();
   if (!trimmed) return false;
-  return hasLatinCharacters(trimmed) && !hasRtlCharacters(trimmed);
+  return !hasRtlCharacters(trimmed) && (hasLatinCharacters(trimmed) || /[0-9]/.test(trimmed));
+}
+
+/**
+ * Determines whether a block element (paragraph, heading, list item, list container, etc.)
+ * should be rendered with LTR layout (dir="ltr" and bidi-ltr-block).
+ *
+ * A block is LTR if:
+ * 1. It contains no RTL characters and contains Latin characters or numbers/symbols.
+ * 2. Or, in mixed content, its primary direction is LTR and its first strong directional
+ *    character is Latin.
+ */
+export function isLtrBlock(text: string): boolean {
+  const trimmed = text.trim();
+  if (!trimmed) return false;
+
+  // Pure Latin / numeric / technical block with zero RTL characters
+  if (!hasRtlCharacters(trimmed)) {
+    return hasLatinCharacters(trimmed) || /[0-9]/.test(trimmed);
+  }
+
+  // Mixed block: must not start with RTL and must be predominantly LTR
+  const firstStrong = getFirstStrongDirection(trimmed);
+  return firstStrong === 'ltr' && isPredominantlyLtr(trimmed);
 }
 
 /**
@@ -271,16 +295,29 @@ export function rehypeBidi(options: RehypeBidiOptions = {}) {
       if (isExcludedNode(node)) return;
 
       const tag = node.tagName;
-      const isBlock = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote'].includes(tag);
+      const isListContainer = tag === 'ul' || tag === 'ol';
+      const isLeafBlock = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote'].includes(tag);
 
-      if (isBlock) {
+      if (isListContainer) {
         const fullText = getNodeText(node);
         node.properties = node.properties || {};
 
-        const firstStrong = getFirstStrongDirection(fullText);
-        const isLtrBlock = firstStrong === 'ltr' && isPredominantlyLtr(fullText);
+        if (isLtrBlock(fullText)) {
+          node.properties.dir = 'ltr';
+          const existing = node.properties.className || [];
+          const classes = Array.isArray(existing) ? existing : [existing];
+          node.properties.className = [...classes, 'bidi-ltr-block'];
+        } else if (baseDirection === 'rtl') {
+          node.properties.dir = 'rtl';
+          const existing = node.properties.className || [];
+          const classes = Array.isArray(existing) ? existing : [existing];
+          node.properties.className = [...classes, 'bidi-rtl-block'];
+        }
+      } else if (isLeafBlock) {
+        const fullText = getNodeText(node);
+        node.properties = node.properties || {};
 
-        if (isLtrBlock) {
+        if (isLtrBlock(fullText)) {
           node.properties.dir = 'ltr';
           const existing = node.properties.className || [];
           const classes = Array.isArray(existing) ? existing : [existing];

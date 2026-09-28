@@ -14,6 +14,7 @@ import {
   isPredominantlyLtr,
   isPredominantlyRtl,
   isLtrLine,
+  isLtrBlock,
   tokenizeBiDiText,
   rehypeBidi,
 } from './dist/bidi.js';
@@ -51,6 +52,10 @@ function renderMarkdown(content, direction = 'rtl') {
               React.createElement('p', { dir, className: `my-3 ${elemClassName}`, ...props }, children),
             blockquote: ({ children, className: elemClassName = '', dir, ...props }) =>
               React.createElement('blockquote', { dir, className: `border-s-4 ${elemClassName}`, ...props }, children),
+            ul: ({ children, className: elemClassName = '', dir, ...props }) =>
+              React.createElement('ul', { dir, className: `my-3 list-disc ps-6 ${elemClassName}`.trim(), ...props }, children),
+            ol: ({ children, className: elemClassName = '', dir, ...props }) =>
+              React.createElement('ol', { dir, className: `my-3 list-decimal ps-6 ${elemClassName}`.trim(), ...props }, children),
             li: ({ children, className: elemClassName = '', dir, ...props }) =>
               React.createElement('li', { dir, className: elemClassName, ...props }, children),
             bdi: ({ children, className: elemClassName = '', dir = 'ltr', ...props }) => {
@@ -133,6 +138,25 @@ describe('BiDi Utility Engine Tests', () => {
       assert.equal(isLtrLine('دستور pnpm test را اجرا کنید.'), false);
       assert.equal(isLtrLine('   '), false);
       assert.equal(isLtrLine(''), false);
+    });
+  });
+
+  describe('isLtrBlock (Block direction analysis)', () => {
+    it('identifies pure Latin, numeric, and technical content as LTR block', () => {
+      assert.equal(isLtrBlock('MLP-6: 93.84% / 50.20%'), true);
+      assert.equal(isLtrBlock('93.84% / 50.20%'), true);
+      assert.equal(isLtrBlock('Accuracy: 95.44% | Loss: 0.002'), true);
+      assert.equal(isLtrBlock('192.168.1.1:8080'), true);
+    });
+
+    it('identifies Persian blocks as not LTR', () => {
+      assert.equal(isLtrBlock('این یک پاراگراف کاملا فارسی است.'), false);
+      assert.equal(isLtrBlock('feature چیست؟'), false);
+      assert.equal(isLtrBlock('مورد اول در لیست'), false);
+    });
+
+    it('identifies predominantly English blocks with secondary Persian gloss as LTR', () => {
+      assert.equal(isLtrBlock('React is a declarative library (توسعه وب)'), true);
     });
   });
 
@@ -258,12 +282,32 @@ describe('RtlMarkdown BiDi Rendering Tests', () => {
     const md = `- مورد اول در لیست به فارسی\n- Step 2: Run npm install\n- مورد سوم به فارسی`;
     const html = renderMarkdown(md);
 
+    // List container for mixed content is RTL
+    assert.match(html, /<ul[^>]*dir="rtl"[^>]*class="[^"]*bidi-rtl-block[^"]*"/);
+
     // Persian list items
     assert.match(html, /<li[^>]*dir="rtl"[^>]*class="[^"]*bidi-rtl-block[^"]*"[^>]*>مورد اول/);
     assert.match(html, /<li[^>]*dir="rtl"[^>]*class="[^"]*bidi-rtl-block[^"]*"[^>]*>مورد سوم/);
 
     // English list item
     assert.match(html, /<li[^>]*dir="ltr"[^>]*class="[^"]*bidi-ltr-block[^"]*"[^>]*>Step 2/);
+  });
+
+  it('renders pure English and metric lists with LTR direction on both ul and li', () => {
+    const md = `- MLP-6: 93.84% / 50.20%\n- MLP-67: 91.27% / 73.02%\n- LSTM-6: 97.22% / 25.97%`;
+    const html = renderMarkdown(md);
+
+    assert.match(html, /<ul[^>]*dir="ltr"[^>]*class="[^"]*bidi-ltr-block[^"]*"/);
+    assert.match(html, /<li[^>]*dir="ltr"[^>]*class="[^"]*bidi-ltr-block[^"]*"[^>]*>MLP-6: 93\.84% \/ 50\.20%/);
+    assert.match(html, /<li[^>]*dir="ltr"[^>]*class="[^"]*bidi-ltr-block[^"]*"[^>]*>MLP-67: 91\.27% \/ 73\.02%/);
+  });
+
+  it('renders pure numeric and percentage lists with LTR direction on both ul and li', () => {
+    const md = `- 93.84% / 50.20%\n- 91.27% / 73.02%`;
+    const html = renderMarkdown(md);
+
+    assert.match(html, /<ul[^>]*dir="ltr"[^>]*class="[^"]*bidi-ltr-block[^"]*"/);
+    assert.match(html, /<li[^>]*dir="ltr"[^>]*class="[^"]*bidi-ltr-block[^"]*"[^>]*>93\.84% \/ 50\.20%/);
   });
 
   it('renders English blockquotes with dir="ltr" and bidi-ltr-block', () => {

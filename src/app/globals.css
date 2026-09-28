@@ -66,6 +66,13 @@ body {
   unicode-bidi: isolate;
 }
 
+/* List markers and alignment for LTR items inside RTL lists */
+.bidi-rtl-block > li.bidi-ltr-block,
+[dir="rtl"] > ul > li.bidi-ltr-block,
+[dir="rtl"] > ol > li.bidi-ltr-block {
+  list-style-position: inside;
+}
+
 .bidi-ltr-line {
   display: block;
   direction: ltr !important;
