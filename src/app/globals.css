@@ -55,6 +55,18 @@ body {
   unicode-bidi: isolate;
 }
 
+/* Ensure KaTeX stretchy boxes (\boxed, \fbox) expand to encompass the full formula */
+.katex .vlist > span {
+  width: 100%;
+}
+
+.katex .katex-stretchy,
+.katex .katex-stretchy.fbox {
+  width: 100% !important;
+  min-width: 100%;
+  display: block;
+}
+
 /* Prose container */
 .rtl-markdown-prose {
   word-break: break-word;
