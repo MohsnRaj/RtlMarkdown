@@ -16,6 +16,7 @@ import {
   isLtrLine,
   isLtrBlock,
   tokenizeBiDiText,
+  normalizeMathDelimiters,
   rehypeBidi,
 } from './dist/bidi.js';
 
@@ -23,6 +24,7 @@ import {
  * Test renderer reproducing the RtlMarkdown component pipeline.
  */
 function renderMarkdown(content, direction = 'rtl') {
+  const normalized = normalizeMathDelimiters(content);
   return renderToStaticMarkup(
     React.createElement(
       'div',
@@ -66,7 +68,7 @@ function renderMarkdown(content, direction = 'rtl') {
             },
           },
         },
-        content
+        normalized
       )
     )
   );
@@ -236,6 +238,64 @@ describe('BiDi Utility Engine Tests', () => {
       assert.equal(engTokens[0].type, 'ltr');
     });
   });
+
+  describe('normalizeMathDelimiters (LaTeX math delimiter normalization)', () => {
+    it('normalizes LaTeX display math \\[ ... \\] to $$ ... $$', () => {
+      const input = 'فرمول زیر برقرار است:\n\n\\[\nx_1,\\ x_2,\\ x_3\n\\]\n\nو ادامه متن.';
+      const output = normalizeMathDelimiters(input);
+
+      assert.match(output, /\$\$\nx_1,\\ x_2,\\ x_3\n\$\$/);
+      assert.doesNotMatch(output, /\\\[/);
+      assert.doesNotMatch(output, /\\\]/);
+    });
+
+    it('normalizes single-line LaTeX display math \\[ ... \\] to $$ ... $$', () => {
+      const input = 'معادله: \\[ h_t = f(x_t, h_{t-1}) \\] در مدل بازگشتی.';
+      const output = normalizeMathDelimiters(input);
+
+      assert.match(output, /\$\$\nh_t = f\(x_t, h_\{t-1\}\)\n\$\$/);
+    });
+
+    it('normalizes inline LaTeX math \\( ... \\) to $ ... $', () => {
+      const input = 'اینجا \\(h_1,h_2,h_3\\) همان حالت‌ها هستند و زمان \\(t\\) است.';
+      const output = normalizeMathDelimiters(input);
+
+      assert.equal(output, 'اینجا $h_1,h_2,h_3$ همان حالت‌ها هستند و زمان $t$ است.');
+    });
+
+    it('handles nested parentheses inside inline math \\(f(x, g(y))\\)', () => {
+      const input = 'تابع \\(f(x, g(y))\\) محاسبه می‌شود.';
+      const output = normalizeMathDelimiters(input);
+
+      assert.equal(output, 'تابع $f(x, g(y))$ محاسبه می‌شود.');
+    });
+
+    it('preserves code blocks containing \\[ or \\(', () => {
+      const input = '```python\n# not math:\na = \\[1, 2\\]\nprint(\\(x\\))\n```\nOutside: \\(y\\)';
+      const output = normalizeMathDelimiters(input);
+
+      assert.match(output, /```python\n# not math:\na = \\\[1, 2\\\]\nprint\(\\\(x\\\)\)\n```/);
+      assert.match(output, /Outside: \$y\$/);
+    });
+
+    it('preserves inline code spans containing math-like delimiters', () => {
+      const input = 'از دستور `\\[not math\\]` و `\\(inline\\)` استفاده کنید. اما \\[math\\] تبدیل شود.';
+      const output = normalizeMathDelimiters(input);
+
+      assert.match(output, /`\\\[not math\\\]`/);
+      assert.match(output, /`\\\(inline\\\)`/);
+      assert.match(output, /\$\$\nmath\n\$\$/);
+    });
+
+    it('preserves existing $$ and $ math blocks without double converting', () => {
+      const input = '$$E = mc^2$$ و فرمول $a + b$ و \\[x_1\\]';
+      const output = normalizeMathDelimiters(input);
+
+      assert.match(output, /\$\$E = mc\^2\$\$/);
+      assert.match(output, /\$a \+ b\$/);
+      assert.match(output, /\$\$\nx_1\n\$\$/);
+    });
+  });
 });
 
 describe('RtlMarkdown BiDi Rendering Tests', () => {
@@ -376,4 +436,157 @@ describe('RtlMarkdown BiDi Rendering Tests', () => {
     assert.match(html, /class="katex"/);
     assert.match(html, /<bdi[^>]*dir="ltr"[^>]*class="[^"]*bidi-ltr-isolate[^"]*"[^>]*>The speed of light is constant in all inertial frames\.<\/bdi>/);
   });
+
+  it('renders LaTeX display math equations with \\[ ... \\] as isolated KaTeX display blocks', () => {
+    const md = `معادله بردار حالت:\n\n\\[\nx_1,\\ x_2,\\ x_3\n\\]\n\nمحاسبه شد.`;
+    const html = renderMarkdown(md);
+
+    assert.match(html, /<span[^>]*class="katex-display"/);
+    assert.match(html, /annotation encoding="application\/x-tex">x_1,\\ x_2,\\ x_3<\/annotation>/);
+    assert.doesNotMatch(html, /\[ x_1/);
+  });
+
+  it('renders LaTeX inline math equations with \\( ... \\) and isolates them cleanly', () => {
+    const md = `اینجا \\(h_1,h_2,h_3\\) همان حالت‌های پنهان هستند.`;
+    const html = renderMarkdown(md);
+
+    assert.match(html, /<span[^>]*class="katex"/);
+    assert.match(html, /annotation encoding="application\/x-tex">h_1,h_2,h_3<\/annotation>/);
+    assert.doesNotMatch(html, /\(h_1,h_2,h_3\)/);
+  });
+
+  it('renders equations containing Persian text inside \\text{...}', () => {
+    const md = `\\[\n\\text{Recurrence} = \\text{استفاده دوباره از اطلاعات قبلی}\n\\]`;
+    const html = renderMarkdown(md);
+
+    assert.match(html, /<span[^>]*class="katex-display"/);
+    assert.match(html, /Recurrence/);
+    assert.match(html, /استفاده/);
+  });
+
+  it('renders complex neural network and VoIP markdown with 100% equation isolation and zero raw brackets', () => {
+    const userMarkdown = `فرقشان این است که **recurrence یک سازوکار/نوع معماری است، اما hidden state چیزی است که این معماری در طول زمان نگه میدارد.**
+
+خیلی ساده:
+
+- **Recurrence** یعنی مدل اجازه دارد اطلاعات مرحلهٔ قبلی را وارد محاسبهٔ مرحلهٔ فعلی کند.
+- **Hidden state** همان اطلاعات فشردهای است که از مرحلهٔ قبلی منتقل میشود.
+
+مثلاً تصور کن سه flow پشت سر هم داریم:
+
+\\[
+x_1,\\ x_2,\\ x_3
+\\]
+
+در یک مدل recurrent:
+
+\\[
+x_1 \\rightarrow h_1
+\\]
+
+بعد:
+
+\\[
+x_2 + h_1 \\rightarrow h_2
+\\]
+
+بعد:
+
+\\[
+x_3 + h_2 \\rightarrow h_3
+\\]
+
+اینجا \\(h_1,h_2,h_3\\) همان **hidden state**ها هستند.
+
+اما خود این چرخه که:
+
+\\[
+h_{t-1} \\rightarrow \\text{مرحله بعد}
+\\]
+
+دوباره به شبکه برمیگردد، همان **recurrence** است.
+
+پس:
+
+\\[
+\\text{Recurrence} = \\text{استفاده دوباره از اطلاعات قبلی}
+\\]
+
+و:
+
+\\[
+\\text{Hidden State} = \\text{خلاصهٔ عددی اطلاعات قبلی}
+\\]
+
+در مدل شما مثلاً در زمان \\(t\\):
+
+\\[
+h_t=f(x_t,h_{t-1})
+\\]
+
+این فرمول خودش خیلی واضح تفاوت را نشان میدهد.
+
+\\(h_{t-1}\\) همان **hidden state قبلی** است.
+
+ولی اینکه مدل اصلاً \\(h_{t-1}\\) را دوباره وارد محاسبهٔ مرحلهٔ بعد میکند، همان **recurrence** است.
+
+پس میتوانیم بگوییم:
+
+\\[
+\\boxed{\\text{Recurrence is the mechanism}}
+\\]
+
+و:
+
+\\[
+\\boxed{\\text{Hidden state is the memory carried by that mechanism}}
+\\]
+
+مثلاً در LSTM، recurrence وجود دارد و مدل چند نوع state دارد، از جمله hidden state و cell state.
+
+اگر recurrence را حذف کنیم، مدل تقریباً اینطوری میشود:
+
+\\[
+x_t \\rightarrow \\text{prediction}
+\\]
+
+ولی اگر recurrence داشته باشیم:
+
+\\[
+x_t + h_{t-1} \\rightarrow \\text{prediction}
+\\]
+
+یعنی تفاوت اصلی همین \\(h_{t-1}\\) است که از گذشته آمده و دوباره استفاده میشود.
+
+در پروژهٔ VoIP شما، خیلی ساده:
+
+\\[
+\\text{Flow فعلی} + \\text{خلاصهای از Flowهای قبلی}
+\\rightarrow
+\\text{تصمیم VoIP / non-VoIP}
+\\]
+
+آن «خلاصهٔ flowهای قبلی» = **hidden state**
+
+و آن «انتقال این خلاصه از یک flow به flow بعدی» = **recurrence**.`;
+
+    const html = renderMarkdown(userMarkdown);
+
+    // Verify all 13 display equations rendered into katex-display
+    const displayMatches = html.match(/class="katex-display"/g) || [];
+    assert.equal(displayMatches.length, 13);
+
+    // Verify all inline equations rendered into katex
+    const totalKatexMatches = html.match(/class="katex"/g) || [];
+    assert.equal(totalKatexMatches.length, 18); // 13 display + 5 inline
+
+    // Verify no unrendered raw LaTeX brackets remain in paragraphs
+    assert.doesNotMatch(html, /<p[^>]*>\[/);
+    assert.doesNotMatch(html, /\\\[/);
+    assert.doesNotMatch(html, /\\\]/);
+
+    // Verify Persian text surrounding formulas has dir="rtl" and bidi-rtl-block
+    assert.match(html, /<p[^>]*dir="rtl"[^>]*class="[^"]*bidi-rtl-block[^"]*"[^>]*>فرقشان این است/);
+  });
 });
+

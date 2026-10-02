@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
-import rehypeBidi from '@/lib/bidi';
+import rehypeBidi, { normalizeMathDelimiters } from '@/lib/bidi';
 import MermaidChart from './MermaidChart';
 import { Check, Copy } from 'lucide-react';
 
@@ -60,6 +60,8 @@ export default function RtlMarkdown({
   className = '',
   direction = 'rtl',
 }: RtlMarkdownProps) {
+  const normalizedContent = useMemo(() => normalizeMathDelimiters(content), [content]);
+
   return (
     <div
       dir={direction}
@@ -237,7 +239,7 @@ export default function RtlMarkdown({
           hr: () => <hr className="my-6 border-neutral-200 dark:border-neutral-800" />,
         }}
       >
-        {content}
+        {normalizedContent}
       </ReactMarkdown>
     </div>
   );

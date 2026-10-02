@@ -253,6 +253,181 @@ function getNodeText(node: any): string {
 }
 
 /**
+ * Normalizes LaTeX math delimiters across a markdown document so that standard
+ * LaTeX syntax (`\[ ... \]` for display math and `\( ... \)` for inline math)
+ * is seamlessly converted into standard Markdown math syntax (`$$ ... $$` and `$ ... $`)
+ * recognized by remark-math and KaTeX, while strictly preserving code blocks,
+ * inline code, and existing math delimiters.
+ */
+export function normalizeMathDelimiters(content: string): string {
+  if (!content) return '';
+
+  let result = '';
+  let i = 0;
+  const len = content.length;
+
+  while (i < len) {
+    // 1. Check for fenced code block at line start (or start of document)
+    const isLineStart = i === 0 || content[i - 1] === '\n';
+    if (isLineStart) {
+      let indent = 0;
+      while (indent < 3 && content[i + indent] === ' ') {
+        indent++;
+      }
+      const fenceChar = content[i + indent];
+      if (fenceChar === '`' || fenceChar === '~') {
+        let fenceLen = 0;
+        while (content[i + indent + fenceLen] === fenceChar) {
+          fenceLen++;
+        }
+        if (fenceLen >= 3) {
+          const fenceStr = fenceChar.repeat(fenceLen);
+          let endOfBlock = len;
+          let searchPos = i + indent + fenceLen;
+
+          while (searchPos < len) {
+            const nextNl = content.indexOf('\n', searchPos);
+            const lineEnd = nextNl === -1 ? len : nextNl;
+            const line = content.slice(searchPos, lineEnd);
+            const trimmedLine = line.trimStart();
+            const spaces = line.length - trimmedLine.length;
+
+            if (spaces <= 3 && trimmedLine.startsWith(fenceStr)) {
+              endOfBlock = nextNl === -1 ? len : nextNl + 1;
+              break;
+            }
+            if (nextNl === -1) {
+              endOfBlock = len;
+              break;
+            }
+            searchPos = nextNl + 1;
+          }
+
+          result += content.slice(i, endOfBlock);
+          i = endOfBlock;
+          continue;
+        }
+      }
+    }
+
+    // 2. Check for inline code span: `+
+    if (content[i] === '`') {
+      let tickCount = 0;
+      while (content[i + tickCount] === '`') {
+        tickCount++;
+      }
+      const tickStr = '`'.repeat(tickCount);
+      const closeIdx = content.indexOf(tickStr, i + tickCount);
+      if (closeIdx !== -1) {
+        const endOfSpan = closeIdx + tickCount;
+        result += content.slice(i, endOfSpan);
+        i = endOfSpan;
+        continue;
+      }
+    }
+
+    // 3. Check for existing display math: $$
+    if (content[i] === '$' && content[i + 1] === '$') {
+      const closeIdx = content.indexOf('$$', i + 2);
+      if (closeIdx !== -1) {
+        const endOfMath = closeIdx + 2;
+        result += content.slice(i, endOfMath);
+        i = endOfMath;
+        continue;
+      }
+    }
+
+    // 4. Check for display math: \[ ... \]
+    if (content[i] === '\\' && content[i + 1] === '[') {
+      let bsCount = 0;
+      let b = i - 1;
+      while (b >= 0 && content[b] === '\\') {
+        bsCount++;
+        b--;
+      }
+      if (bsCount % 2 === 0) {
+        let searchPos = i + 2;
+        let foundClose = -1;
+        while (searchPos < len) {
+          const idx = content.indexOf('\\]', searchPos);
+          if (idx === -1) break;
+          let closeBsCount = 0;
+          let cb = idx - 1;
+          while (cb >= searchPos && content[cb] === '\\') {
+            closeBsCount++;
+            cb--;
+          }
+          if (closeBsCount % 2 === 0) {
+            foundClose = idx;
+            break;
+          }
+          searchPos = idx + 2;
+        }
+
+        if (foundClose !== -1) {
+          const mathContent = content.slice(i + 2, foundClose).trim();
+          if (mathContent) {
+            const prefix = result.endsWith('\n\n')
+              ? ''
+              : result.endsWith('\n')
+                ? '\n'
+                : '\n\n';
+            result += `${prefix}$$\n${mathContent}\n$$\n\n`;
+          }
+          i = foundClose + 2;
+          if (content[i] === '\r') i++;
+          if (content[i] === '\n') i++;
+          continue;
+        }
+      }
+    }
+
+    // 5. Check for inline math: \( ... \)
+    if (content[i] === '\\' && content[i + 1] === '(') {
+      let bsCount = 0;
+      let b = i - 1;
+      while (b >= 0 && content[b] === '\\') {
+        bsCount++;
+        b--;
+      }
+      if (bsCount % 2 === 0) {
+        let searchPos = i + 2;
+        let foundClose = -1;
+        while (searchPos < len) {
+          const idx = content.indexOf('\\)', searchPos);
+          if (idx === -1) break;
+          let closeBsCount = 0;
+          let cb = idx - 1;
+          while (cb >= searchPos && content[cb] === '\\') {
+            closeBsCount++;
+            cb--;
+          }
+          if (closeBsCount % 2 === 0) {
+            foundClose = idx;
+            break;
+          }
+          searchPos = idx + 2;
+        }
+
+        if (foundClose !== -1) {
+          const mathContent = content.slice(i + 2, foundClose).trim();
+          if (mathContent) {
+            result += `$${mathContent}$`;
+          }
+          i = foundClose + 2;
+          continue;
+        }
+      }
+    }
+
+    result += content[i];
+    i++;
+  }
+
+  return result;
+}
+
+/**
  * Checks if a HAST element should be excluded from BiDi transformations.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

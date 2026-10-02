@@ -48,6 +48,13 @@ body {
   text-align: center;
 }
 
+/* Enhanced typography and isolation for Persian / Arabic text inside KaTeX */
+.katex .text,
+.katex .text .mord {
+  font-family: var(--font-sans), 'Vazirmatn', system-ui, sans-serif !important;
+  unicode-bidi: isolate;
+}
+
 /* Prose container */
 .rtl-markdown-prose {
   word-break: break-word;
