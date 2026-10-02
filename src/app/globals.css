@@ -55,16 +55,20 @@ body {
   unicode-bidi: isolate;
 }
 
-/* Ensure KaTeX stretchy boxes (\boxed, \fbox) expand to encompass the full formula */
-.katex .vlist > span {
-  width: 100%;
+/* KaTeX \boxed & \fbox border fix:
+   KaTeX renders an empty .katex-stretchy.fbox overlay inside a fixed-layout vlist table-cell
+   which collapses to 0-width in modern WebKit/Blink browsers, causing the left and right
+   borders to collapse together into a central vertical line instead of an enclosing box.
+   Hiding the collapsing overlay and styling .boxpad directly wraps the formula cleanly. */
+.katex .katex-stretchy.fbox {
+  display: none !important;
 }
 
-.katex .katex-stretchy,
-.katex .katex-stretchy.fbox {
-  width: 100% !important;
-  min-width: 100%;
-  display: block;
+.katex .boxpad {
+  padding: 0.25em 0.45em !important;
+  border: 0.05em solid currentColor !important;
+  border-radius: 3px;
+  display: inline-block !important;
 }
 
 /* Prose container */
