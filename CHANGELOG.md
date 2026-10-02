@@ -3,6 +3,15 @@
 All notable changes to **RTL Markdown Studio** will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.3.0] - 2026-10-02
+
+### 🚀 Features
+- feat(math): support standard LaTeX delimiters and Persian KaTeX typography (66b4aa6)
+
+### 🐛 Bug Fixes
+- fix(math): resolve KaTeX boxed border collapse using content wrapper (d55fda2)
+- fix(math): prevent horizontal collapse of KaTeX boxed formulas with stretchy containers (d326f09)
+
 ## [v1.2.2] - 2026-09-28
 
 ### 🐛 Bug Fixes
