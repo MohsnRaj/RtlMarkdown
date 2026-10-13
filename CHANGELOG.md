@@ -3,6 +3,11 @@
 All notable changes to **RTL Markdown Studio** will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.3.1] - 2026-10-13
+
+### 🐛 Bug Fixes
+- fix(bidi): prevent parenthesis tearing and trailing punctuation scramble in mixed text tokenization (c64ff98)
+
 ## [v1.3.0] - 2026-10-02
 
 ### 🚀 Features
