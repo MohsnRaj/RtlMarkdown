@@ -3,6 +3,10 @@
 All notable changes to **RTL Markdown Studio** will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.3.2] - 2026-10-13
+
+- Release v1.3.2
+
 ## [v1.3.1] - 2026-10-13
 
 ### 🐛 Bug Fixes
