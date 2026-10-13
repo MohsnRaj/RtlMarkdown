@@ -222,6 +222,35 @@ export function tokenizeBiDiText(text: string): BiDiToken[] {
         ltrStart += leadingPunctMatch[0].length;
       }
 
+      // If the matched chunk ends with an unclosed opening delimiter (e.g., "HLS (" or "foo ["),
+      // that delimiter opens the subsequent Persian/RTL clause. Leave that delimiter and any
+      // preceding whitespace in the RTL run to prevent tearing parenthesized phrases.
+      const trailingOpenMatch = content.match(/(\s*[\(\[\{«<"'“‘]+)$/);
+      if (trailingOpenMatch) {
+        content = content.slice(0, content.length - trailingOpenMatch[0].length);
+      }
+
+      // Trailing colons, semicolons, or commas on an inline English term or gloss
+      // (e.g., "(Student Playback):" or "Method:") belong to the outer Persian sentence structure.
+      // Keeping ":" inside the LTR token places it at the visual right edge, causing it to flip
+      // adjacent to the preceding Persian text. Leave them in the RTL run.
+      const trailingColonMatch = content.match(/(\s*[:;,]+)$/);
+      if (trailingColonMatch) {
+        content = content.slice(0, content.length - trailingColonMatch[0].length);
+      }
+
+      // Parenthesized or bracketed gloss followed by trailing sentence punctuation
+      // (e.g., "(Student Playback)." or "[Note]!") where the punctuation belongs to the Persian sentence.
+      const glossPunctMatch = content.match(/^[\(\[\{«<"'“‘].*[\)\]\}»>"'”’]([.,;!?]+)$/);
+      if (glossPunctMatch) {
+        content = content.slice(0, content.length - glossPunctMatch[1].length);
+      }
+
+      const trailingSpaces = content.match(/\s+$/);
+      if (trailingSpaces) {
+        content = content.slice(0, content.length - trailingSpaces[0].length);
+      }
+
       if (hasLatinCharacters(content)) {
         if (ltrStart > lastIndex) {
           segments.push({ type: 'rtl', text: text.slice(lastIndex, ltrStart) });

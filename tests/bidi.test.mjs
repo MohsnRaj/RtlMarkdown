@@ -237,6 +237,41 @@ describe('BiDi Utility Engine Tests', () => {
       assert.equal(engTokens.length, 1);
       assert.equal(engTokens[0].type, 'ltr');
     });
+
+    it('excludes trailing opening delimiter before Persian text to prevent parenthesis tearing', () => {
+      const input = '۱. وضعیت کلی اتصال HLS (چه بخشهایی درست کار میکنند؟)';
+      const tokens = tokenizeBiDiText(input);
+
+      assert.equal(tokens.length, 3);
+      assert.equal(tokens[0].type, 'rtl');
+      assert.equal(tokens[0].text, '۱. وضعیت کلی اتصال ');
+      assert.equal(tokens[1].type, 'ltr');
+      assert.equal(tokens[1].text, 'HLS');
+      assert.equal(tokens[2].type, 'rtl');
+      assert.equal(tokens[2].text, ' (چه بخشهایی درست کار میکنند؟)');
+    });
+
+    it('excludes trailing colon from parenthesized gloss to preserve list item punctuation', () => {
+      const input = 'پخش استریم ویدیوی دانشجو (Student Playback):';
+      const tokens = tokenizeBiDiText(input);
+
+      assert.equal(tokens.length, 3);
+      assert.equal(tokens[0].type, 'rtl');
+      assert.equal(tokens[0].text, 'پخش استریم ویدیوی دانشجو ');
+      assert.equal(tokens[1].type, 'ltr');
+      assert.equal(tokens[1].text, '(Student Playback)');
+      assert.equal(tokens[2].type, 'rtl');
+      assert.equal(tokens[2].text, ':');
+    });
+
+    it('excludes trailing colon from inline English term to prevent colon flip', () => {
+      const input = 'گزینه Method: مقدار POST را انتخاب کنید';
+      const tokens = tokenizeBiDiText(input);
+
+      assert.equal(tokens[1].text, 'Method');
+      assert.equal(tokens[2].text, ': مقدار ');
+      assert.equal(tokens[3].text, 'POST');
+    });
   });
 
   describe('normalizeMathDelimiters (LaTeX math delimiter normalization)', () => {
@@ -410,6 +445,22 @@ describe('RtlMarkdown BiDi Rendering Tests', () => {
     const html = renderMarkdown(md);
 
     assert.match(html, /<bdi[^>]*dir="ltr"[^>]*class="[^"]*bidi-ltr-isolate[^"]*"[^>]*>You can upgrade with pnpm update rtl-markdown@1\.2\.3 easily\.<\/bdi>/);
+  });
+
+  it('renders mixed Persian headings followed by parenthesized question with clean parenthesis isolation', () => {
+    const md = '### ۱. وضعیت کلی اتصال HLS (چه بخشهایی درست کار میکنند؟)';
+    const html = renderMarkdown(md);
+
+    assert.match(html, /<h3[^>]*dir="rtl"[^>]*class="[^"]*bidi-rtl-block[^"]*"/);
+    assert.match(html, /<bdi[^>]*dir="ltr"[^>]*class="[^"]*bidi-ltr-isolate[^"]*"[^>]*>HLS<\/bdi>/);
+    assert.match(html, /\(چه بخشهایی درست کار میکنند؟\)/);
+  });
+
+  it('renders list items with bold Persian title and parenthesized English gloss followed by colon cleanly', () => {
+    const md = '1. **پخش استریم ویدیوی دانشجو (Student Playback):**';
+    const html = renderMarkdown(md);
+
+    assert.match(html, /<bdi[^>]*dir="ltr"[^>]*class="[^"]*bidi-ltr-isolate[^"]*"[^>]*>\(Student Playback\)<\/bdi>:/);
   });
 
   it('renders English ordered lists with LTR direction', () => {
