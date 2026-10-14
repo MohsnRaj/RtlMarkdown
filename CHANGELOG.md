@@ -3,6 +3,12 @@
 All notable changes to **RTL Markdown Studio** will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.3.3] - 2026-10-14
+
+### 🐛 Bug Fixes
+- fix(bidi): align table cells by text direction (057425d)
+- fix(bidi): prevent parenthesis tearing and trailing punctuation scramble in mixed text tokenization (c64ff98)
+
 ## [v1.3.2] - 2026-10-13
 
 - Release v1.3.2
