@@ -501,8 +501,27 @@ export function rehypeBidi(options: RehypeBidiOptions = {}) {
       const tag = node.tagName;
       const isListContainer = tag === 'ul' || tag === 'ol';
       const isLeafBlock = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote'].includes(tag);
+      const isTableCell = tag === 'th' || tag === 'td';
 
-      if (isListContainer) {
+      if (isTableCell) {
+        const fullText = getNodeText(node);
+        node.properties = node.properties || {};
+        const direction = node.properties.dir === 'ltr' || node.properties.dir === 'rtl'
+          ? node.properties.dir
+          : isLtrBlock(fullText) ? 'ltr' : hasRtlCharacters(fullText) ? 'rtl' : baseDirection;
+        node.properties.dir = direction;
+
+        // GFM's :--- marker adds align="left" to every cell. Let the cell's
+        // detected direction control start alignment, while retaining centered columns.
+        if (node.properties.align !== 'center') {
+          delete node.properties.align;
+          const existing = node.properties.className || [];
+          const classes = Array.isArray(existing) ? existing : [existing];
+          node.properties.className = [...classes, direction === 'ltr' ? 'bidi-ltr-block' : 'bidi-rtl-block'];
+        }
+
+        if (direction === 'ltr') return;
+      } else if (isListContainer) {
         const fullText = getNodeText(node);
         node.properties = node.properties || {};
 

@@ -334,6 +334,39 @@ describe('BiDi Utility Engine Tests', () => {
 });
 
 describe('RtlMarkdown BiDi Rendering Tests', () => {
+  it('aligns Persian GFM table cells by their content despite left alignment markers', () => {
+    const md = `| بخش چکیده | ترجمه و محتوا | هدف و تطبیق با درخواست |
+| :--- | :--- | :--- |
+| **شواهد عددی در لود ۵۰ ($N=50$)** | در لود سنگین ۵۰ نود:<br>• ترشهولد $0.5\\text{ ms}$ ← تاخیر میانگین **$0.4718\\text{ ms}$** | ارائه مثال ملموس و دقیق |`;
+    const html = renderMarkdown(md);
+
+    for (const cell of html.match(/<(?:th|td)\b[^>]*>/g) || []) {
+      assert.match(cell, /dir="rtl"/);
+      assert.match(cell, /class="[^"]*bidi-rtl-block[^"]*"/);
+      assert.doesNotMatch(cell, /text-align:left|align="left"/);
+    }
+    assert.equal((html.match(/<th\b/g) || []).length, 3);
+    assert.equal((html.match(/<td\b/g) || []).length, 3);
+    assert.match(html, /class="katex"/);
+  });
+
+  it('keeps English table cells LTR and preserves explicit centered columns', () => {
+    const md = `| توضیح | English notes | وضعیت |
+| :--- | :--- | :---: |
+| متن فارسی با Wi-Fi | A complete English sentence. | آماده |`;
+    const html = renderMarkdown(md);
+    const headers = html.match(/<th\b[^>]*>/g) || [];
+    const cells = html.match(/<td\b[^>]*>/g) || [];
+
+    assert.match(headers[0], /dir="rtl"/);
+    assert.match(headers[1], /dir="ltr"/);
+    assert.match(cells[0], /dir="rtl"/);
+    assert.match(cells[1], /dir="ltr"/);
+    assert.match(cells[1], /class="[^"]*bidi-ltr-block[^"]*"/);
+    assert.match(headers[2], /text-align:center/);
+    assert.match(cells[2], /text-align:center/);
+  });
+
   it('renders pure English paragraphs as left-aligned LTR blocks', () => {
     const md = 'This is a standalone English paragraph that must be left aligned.';
     const html = renderMarkdown(md);
