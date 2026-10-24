@@ -73,7 +73,34 @@ body {
 
 /* Prose container */
 .rtl-markdown-prose {
-  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Responsive Table Styling & Horizontal Scrollbar */
+.rtl-markdown-prose table {
+  word-break: normal;
+}
+
+.rtl-markdown-prose .overflow-x-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
+}
+
+.rtl-markdown-prose .overflow-x-auto::-webkit-scrollbar {
+  height: 6px;
+}
+
+.rtl-markdown-prose .overflow-x-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rtl-markdown-prose .overflow-x-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.4);
+  border-radius: 9999px;
+}
+
+.rtl-markdown-prose .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
 }
 
 /* Strict BiDi Isolation & Left-Alignment Rules for English Text */
@@ -193,6 +220,10 @@ body {
   pre {
     white-space: pre-wrap !important;
     word-break: break-word !important;
+  }
+
+  .rtl-markdown-prose .overflow-x-auto {
+    overflow: visible !important;
   }
 
   a {

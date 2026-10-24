@@ -196,7 +196,7 @@ export default function RtlMarkdown({
           },
           table: ({ children, className: elemClassName = '', ...props }) => (
             <div className="my-6 w-full overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-800">
-              <table className={`w-full border-collapse text-start text-sm ${elemClassName}`} {...props}>
+              <table className={`min-w-full w-max border-collapse text-start text-sm ${elemClassName}`} {...props}>
                 {children}
               </table>
             </div>
@@ -211,7 +211,7 @@ export default function RtlMarkdown({
           ),
           th: ({ children, className: elemClassName = '', ...props }) => (
             <th
-              className={`px-4 py-2.5 font-semibold text-neutral-900 dark:text-neutral-100 ${elemClassName}`}
+              className={`whitespace-nowrap px-4 py-2.5 font-semibold text-neutral-900 dark:text-neutral-100 ${elemClassName}`}
               {...props}
             >
               {children}
@@ -219,7 +219,7 @@ export default function RtlMarkdown({
           ),
           td: ({ children, className: elemClassName = '', ...props }) => (
             <td
-              className={`border-b border-neutral-100 px-4 py-2.5 text-neutral-700 last:border-0 dark:border-neutral-800/60 dark:text-neutral-300 ${elemClassName}`}
+              className={`whitespace-nowrap border-b border-neutral-100 px-4 py-2.5 text-neutral-700 last:border-0 dark:border-neutral-800/60 dark:text-neutral-300 ${elemClassName}`}
               {...props}
             >
               {children}

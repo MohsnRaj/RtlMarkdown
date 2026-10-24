@@ -60,6 +60,28 @@ function renderMarkdown(content, direction = 'rtl') {
               React.createElement('ol', { dir, className: `my-3 list-decimal ps-6 ${elemClassName}`.trim(), ...props }, children),
             li: ({ children, className: elemClassName = '', dir, ...props }) =>
               React.createElement('li', { dir, className: elemClassName, ...props }, children),
+            table: ({ children, className: elemClassName = '', ...props }) =>
+              React.createElement(
+                'div',
+                { className: 'my-6 w-full overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-800' },
+                React.createElement(
+                  'table',
+                  { className: `min-w-full w-max border-collapse text-start text-sm ${elemClassName}`, ...props },
+                  children
+                )
+              ),
+            th: ({ children, className: elemClassName = '', ...props }) =>
+              React.createElement(
+                'th',
+                { className: `whitespace-nowrap px-4 py-2.5 font-semibold text-neutral-900 dark:text-neutral-100 ${elemClassName}`, ...props },
+                children
+              ),
+            td: ({ children, className: elemClassName = '', ...props }) =>
+              React.createElement(
+                'td',
+                { className: `whitespace-nowrap border-b border-neutral-100 px-4 py-2.5 text-neutral-700 last:border-0 dark:border-neutral-800/60 dark:text-neutral-300 ${elemClassName}`, ...props },
+                children
+              ),
             bdi: ({ children, className: elemClassName = '', dir = 'ltr', ...props }) => {
               const classes = elemClassName.includes('bidi-ltr-isolate')
                 ? elemClassName
@@ -365,6 +387,26 @@ describe('RtlMarkdown BiDi Rendering Tests', () => {
     assert.match(cells[1], /class="[^"]*bidi-ltr-block[^"]*"/);
     assert.match(headers[2], /text-align:center/);
     assert.match(cells[2], /text-align:center/);
+  });
+
+  it('renders wide tables inside an overflow-x-auto container with min-w-full w-max and whitespace-nowrap', () => {
+    const md = `| بودجه و بار شبکه | روش (Method) | میانگین تاخیر PC1 (ms) | صدک ۹۵ ($p95$) | صدک ۹۹ ($p99$) | شاخص عدالت دوگروهی ($J$) | سهم اشغال کانال (%) <br> PC1 / PC3 / Wi-Fi | موفقیت Wi-Fi <br> (تعداد / بیشترین وقفه) | ارضای قید (Feasible) |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **$D_{\\rm th} = 1.0$ ms, $N=20$** | **Supervised CA (Proposed)** | $0.946 \\pm 0.001$ | $8.08$ | $16.06$ | $\\mathbf{0.680 \\pm 0.007}$ | $67.8$ / $18.4$ / $6.0$ | $149$ / $0.66$ s | **Yes** |`;
+    const html = renderMarkdown(md);
+
+    assert.match(html, /<div class="[^"]*overflow-x-auto[^"]*"/);
+    assert.match(html, /<table class="[^"]*min-w-full[^"]*w-max[^"]*"/);
+    const headers = html.match(/<th\b[^>]*>/g) || [];
+    const cells = html.match(/<td\b[^>]*>/g) || [];
+    assert.equal(headers.length, 9);
+    assert.equal(cells.length, 9);
+    for (const h of headers) {
+      assert.match(h, /class="[^"]*whitespace-nowrap[^"]*"/);
+    }
+    for (const c of cells) {
+      assert.match(c, /class="[^"]*whitespace-nowrap[^"]*"/);
+    }
   });
 
   it('renders pure English paragraphs as left-aligned LTR blocks', () => {
