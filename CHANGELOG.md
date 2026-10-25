@@ -3,6 +3,12 @@
 All notable changes to **RTL Markdown Studio** will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.3.4] - 2026-10-25
+
+### 🐛 Bug Fixes
+- fix(math): support double-backslash delimiters and unescape subscripts (3ea964a)
+- fix(table): enable intrinsic max-width horizontal scroll and prevent cell text squishing (9be2774)
+
 ## [v1.3.3] - 2026-10-14
 
 ### 🐛 Bug Fixes
