@@ -366,86 +366,110 @@ export function normalizeMathDelimiters(content: string): string {
       }
     }
 
-    // 4. Check for display math: \[ ... \]
-    if (content[i] === '\\' && content[i + 1] === '[') {
-      let bsCount = 0;
-      let b = i - 1;
-      while (b >= 0 && content[b] === '\\') {
-        bsCount++;
-        b--;
-      }
-      if (bsCount % 2 === 0) {
-        let searchPos = i + 2;
-        let foundClose = -1;
-        while (searchPos < len) {
-          const idx = content.indexOf('\\]', searchPos);
-          if (idx === -1) break;
-          let closeBsCount = 0;
-          let cb = idx - 1;
-          while (cb >= searchPos && content[cb] === '\\') {
-            closeBsCount++;
-            cb--;
-          }
-          if (closeBsCount % 2 === 0) {
-            foundClose = idx;
-            break;
-          }
-          searchPos = idx + 2;
+    // 4. Check for display math: \[ ... \] or \\[ ... \\]
+    let bsCount = 0;
+    while (i + bsCount < len && content[i + bsCount] === '\\') {
+      bsCount++;
+    }
+
+    if ((bsCount === 1 || bsCount === 2) && content[i + bsCount] === '[') {
+      const openLen = bsCount + 1;
+      const openStart = i + openLen;
+      let searchPos = openStart;
+      let foundClose = -1;
+      let closeLen = 0;
+
+      while (searchPos < len) {
+        // Disallow crossing markdown headers
+        if (
+          content[searchPos] === '\n' &&
+          (content.startsWith('\n#', searchPos) || content.startsWith('\n##', searchPos))
+        ) {
+          break;
         }
 
-        if (foundClose !== -1) {
-          const mathContent = content.slice(i + 2, foundClose).trim();
-          if (mathContent) {
-            const prefix = result.endsWith('\n\n')
+        const idx = content.indexOf(']', searchPos);
+        if (idx === -1) break;
+
+        let cBs = 0;
+        let cb = idx - 1;
+        while (cb >= openStart && content[cb] === '\\') {
+          cBs++;
+          cb--;
+        }
+
+        if (cBs === 1 || cBs === 2) {
+          foundClose = cb + 1;
+          closeLen = cBs + 1;
+          break;
+        }
+        searchPos = idx + 1;
+      }
+
+      if (foundClose !== -1) {
+        let mathContent = content.slice(openStart, foundClose).trim();
+        if (mathContent) {
+          mathContent = mathContent.replace(/\\_/g, '_');
+          const prefix = !result
+            ? ''
+            : result.endsWith('\n\n')
               ? ''
               : result.endsWith('\n')
                 ? '\n'
                 : '\n\n';
-            result += `${prefix}$$\n${mathContent}\n$$\n\n`;
-          }
-          i = foundClose + 2;
-          if (content[i] === '\r') i++;
-          if (content[i] === '\n') i++;
-          continue;
+          result += `${prefix}$$\n${mathContent}\n$$\n\n`;
         }
+        i = foundClose + closeLen;
+        if (content[i] === '\r') i++;
+        if (content[i] === '\n') i++;
+        continue;
       }
     }
 
-    // 5. Check for inline math: \( ... \)
-    if (content[i] === '\\' && content[i + 1] === '(') {
-      let bsCount = 0;
-      let b = i - 1;
-      while (b >= 0 && content[b] === '\\') {
-        bsCount++;
-        b--;
-      }
-      if (bsCount % 2 === 0) {
-        let searchPos = i + 2;
-        let foundClose = -1;
-        while (searchPos < len) {
-          const idx = content.indexOf('\\)', searchPos);
-          if (idx === -1) break;
-          let closeBsCount = 0;
-          let cb = idx - 1;
-          while (cb >= searchPos && content[cb] === '\\') {
-            closeBsCount++;
-            cb--;
-          }
-          if (closeBsCount % 2 === 0) {
-            foundClose = idx;
-            break;
-          }
-          searchPos = idx + 2;
+    // 5. Check for inline math: \( ... \) or \\( ... \\)
+    if ((bsCount === 1 || bsCount === 2) && content[i + bsCount] === '(') {
+      const openLen = bsCount + 1;
+      const openStart = i + openLen;
+      let searchPos = openStart;
+      let foundClose = -1;
+      let closeLen = 0;
+
+      while (searchPos < len) {
+        // Inline math cannot cross paragraph boundaries or markdown headers
+        if (
+          content.startsWith('\n\n', searchPos) ||
+          content.startsWith('\r\n\r\n', searchPos) ||
+          content.startsWith('\n#', searchPos)
+        ) {
+          break;
         }
 
-        if (foundClose !== -1) {
-          const mathContent = content.slice(i + 2, foundClose).trim();
-          if (mathContent) {
-            result += `$${mathContent}$`;
-          }
-          i = foundClose + 2;
-          continue;
+        const idx = content.indexOf(')', searchPos);
+        if (idx === -1) break;
+
+        let cBs = 0;
+        let cb = idx - 1;
+        while (cb >= openStart && content[cb] === '\\') {
+          cBs++;
+          cb--;
         }
+
+        if (cBs === 1 || cBs === 2) {
+          foundClose = cb + 1;
+          closeLen = cBs + 1;
+          break;
+        }
+        searchPos = idx + 1;
+      }
+
+      if (foundClose !== -1) {
+        let mathContent = content.slice(openStart, foundClose).trim();
+        if (mathContent) {
+          mathContent = mathContent.replace(/\\_/g, '_');
+          result += `$${mathContent}$`;
+        }
+        i = foundClose + closeLen;
+        continue;
       }
     }
 

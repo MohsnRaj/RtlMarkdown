@@ -352,6 +352,32 @@ describe('BiDi Utility Engine Tests', () => {
       assert.match(output, /\$a \+ b\$/);
       assert.match(output, /\$\$\nx_1\n\$\$/);
     });
+
+    it('normalizes double-backslash LaTeX display math \\\\[ ... \\\\] with array indexing', () => {
+      const input = 'سری تأخیر:\n\n\\\\[ x(t)=[x_0,x_1,\\ldots,x_m] \\\\]\n\nنمونه‌ها:\n\n\\\\[ C(t)=x(t)[1:-1] \\\\]';
+      const output = normalizeMathDelimiters(input);
+
+      assert.match(output, /\$\$\nx\(t\)=\[x_0,x_1,\\ldots,x_m\]\n\$\$/);
+      assert.match(output, /\$\$\nC\(t\)=x\(t\)\[1:-1\]\n\$\$/);
+      assert.doesNotMatch(output, /\\\[/);
+      assert.doesNotMatch(output, /\\\]/);
+    });
+
+    it('normalizes double-backslash inline LaTeX math \\\\( ... \\\\)', () => {
+      const input = 'با فرض \\\\(\\beta=0.95\\\\) و \\\\(\\rho_1=0\\\\) و آستانه \\\\(T=1\\\\) میلی‌ثانیه.';
+      const output = normalizeMathDelimiters(input);
+
+      assert.equal(output, 'با فرض $\\beta=0.95$ و $\\rho_1=0$ و آستانه $T=1$ میلی‌ثانیه.');
+    });
+
+    it('un-escapes markdown escaped underscores \\_ inside math formulas into proper subscripts', () => {
+      const input = '\\\\[ M(t)=\\sum\\_{d\\in C(t)}d \\\\] و \\\\[ R=2500E\\_{\\max}+8000+2500 \\\\]';
+      const output = normalizeMathDelimiters(input);
+
+      assert.match(output, /\$\$\nM\(t\)=\\sum_\{d\\in C\(t\)\}d\n\$\$/);
+      assert.match(output, /\$\$\nR=2500E_\{\\max\}\+8000\+2500\n\$\$/);
+      assert.doesNotMatch(output, /\\_/);
+    });
   });
 });
 
@@ -713,6 +739,74 @@ x_t + h_{t-1} \\rightarrow \\text{prediction}
 
     // Verify Persian text surrounding formulas has dir="rtl" and bidi-rtl-block
     assert.match(html, /<p[^>]*dir="rtl"[^>]*class="[^"]*bidi-rtl-block[^"]*"[^>]*>فرقشان این است/);
+  });
+
+  it('renders complex Supervised CA document with double-backslash math, tables, and subscript isolation', () => {
+    const doc = `یک نکتهٔ مهم: در سند، خانوادهٔ تأییدشدهٔ جدید برای آستانههای ۰٫۵، ۱ و ۲ میلیثانیه از \\\\(\\beta=0.95\\\\)، حداکثر ۸ ایپاک و \\\\(\\rho_1=0\\\\) استفاده میکند.
+
+# سه شرط اصلی آزادسازی در Supervised CA
+
+هدف کنترلکننده این است که در صورت وجود شرایط مناسب، با افزایش CW نود PC1 و تغییر CW کلاس پسزمینه، به Wi-Fi یا PC3 فرصت بیشتری برای رقابت بر سر کانال بدهد.
+
+## شرط اول: بانک تأخیر (Delay Bank)
+
+### فرمولهای کامل
+
+ابتدا سری رسمی تأخیر PC1 را داریم:
+
+\\\\[ x(t)=[x_0,x_1,\\ldots,x_m] \\\\]
+
+نمونههای تکمیلشده:
+
+\\\\[ C(t)=x(t)[1:-1] \\\\]
+
+سپس:
+
+\\\\[ n(t)=|C(t)| \\\\]
+
+\\\\[ M(t)=\\sum\\_{d\\in C(t)}d \\\\]
+
+\\\\[ q(t)=x(t)[-1] \\\\]
+
+میانگین رسمی تأخیر:
+
+\\\\[ \\boxed{D(t)=\\frac{M(t)}{1000n(t)}} \\\\]
+
+بانک تأخیر داخلی کنترلکننده:
+
+\\\\[ \\boxed{B_D(t)=1000\\beta Tn(t)-M(t)-q(t)} \\\\]
+
+| پارامتر | معنی |
+| --- | --- |
+| \\\\(T\\\\) | آستانهٔ تأخیر |
+| \\\\(\\beta\\\\) | ضریب احتیاطی |
+
+فرمول ذخیره:
+
+\\\\[ \\boxed{R=2500E\\_{\\max}+8000+2500} \\\\]
+
+در خانوادهٔ تأییدشدهٔ جدید:
+
+\\\\[ E\\_{\\max}=8 \\\\]`;
+
+    const html = renderMarkdown(doc);
+
+    // Verify all 9 display equations are rendered with katex-display
+    const displayMatches = html.match(/class="katex-display"/g) || [];
+    assert.equal(displayMatches.length, 9);
+
+    // Verify zero unrendered LaTeX delimiters or raw escaped brackets
+    assert.doesNotMatch(html, /\\\[/);
+    assert.doesNotMatch(html, /\\\]/);
+    assert.doesNotMatch(html, /\\\(/);
+    assert.doesNotMatch(html, /\\\)/);
+    assert.doesNotMatch(html, /<p[^>]*>\[\s*x\(t\)/);
+
+    // Verify table inline math cells rendered as katex
+    assert.match(html, /<td[^>]*>[\s\S]*?<span[^>]*class="katex"/);
+
+    // Verify boxed equations render properly
+    assert.match(html, /boxed/);
   });
 });
 
