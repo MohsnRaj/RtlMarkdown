@@ -56,10 +56,12 @@ body {
 }
 
 /* KaTeX \boxed & \fbox border fix:
-   KaTeX renders an empty .katex-stretchy.fbox overlay inside a fixed-layout vlist table-cell
+   KaTeX renders an empty .stretchy.fbox overlay inside a fixed-layout vlist table-cell
    which collapses to 0-width in modern WebKit/Blink browsers, causing the left and right
    borders to collapse together into a central vertical line instead of an enclosing box.
    Hiding the collapsing overlay and styling .boxpad directly wraps the formula cleanly. */
+.katex .fbox,
+.katex .stretchy.fbox,
 .katex .katex-stretchy.fbox {
   display: none !important;
 }

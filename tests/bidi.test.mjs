@@ -616,6 +616,15 @@ describe('RtlMarkdown BiDi Rendering Tests', () => {
     assert.match(html, /استفاده/);
   });
 
+  it('renders boxed LaTeX formulas with subscripts and logical operators cleanly', () => {
+    const md = `\\[ \\boxed{(E\\ge4\\land Success_W)\\lor E\\ge8} \\]`;
+    const html = renderMarkdown(md);
+
+    assert.match(html, /<span[^>]*class="katex-display"/);
+    assert.match(html, /annotation encoding="application\/x-tex">\\boxed{\(E\\ge4\\land Success_W\)\\lor E\\ge8}<\/annotation>/);
+    assert.match(html, /class="boxpad"/);
+  });
+
   it('renders complex neural network and VoIP markdown with 100% equation isolation and zero raw brackets', () => {
     const userMarkdown = `فرقشان این است که **recurrence یک سازوکار/نوع معماری است، اما hidden state چیزی است که این معماری در طول زمان نگه میدارد.**
 
