@@ -3,6 +3,11 @@
 All notable changes to **RTL Markdown Studio** will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.3.5] - 2026-10-29
+
+### 🐛 Bug Fixes
+- fix(katex): prevent collapsed fbox overlay from creating vertical line artifact in boxed formulas (2748053)
+
 ## [v1.3.4] - 2026-10-25
 
 ### 🐛 Bug Fixes
