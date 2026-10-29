@@ -3,6 +3,11 @@
 All notable changes to **RTL Markdown Studio** will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.4.0] - 2026-10-29
+
+### 🚀 Features
+- feat(ui): display application version badge in top navigation header (d651a23)
+
 ## [v1.3.5] - 2026-10-29
 
 ### 🐛 Bug Fixes
