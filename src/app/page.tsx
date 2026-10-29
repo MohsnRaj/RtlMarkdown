@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import RtlMarkdown from '@/components/RtlMarkdown';
+import { version as APP_VERSION } from '../../package.json';
 import {
   Code,
   Sigma,
@@ -282,6 +283,13 @@ export default function Home() {
               <h1 className="text-sm font-bold text-neutral-900 dark:text-white">
                 استودیو رندر RTL مارک‌داون
               </h1>
+              <span
+                dir="ltr"
+                className="inline-flex items-center rounded-md border border-blue-200/80 bg-blue-50/80 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-blue-700 shadow-2xs dark:border-blue-900/60 dark:bg-blue-950/50 dark:text-blue-300"
+                title={`نسخه فعلی نرم‌افزار: v${APP_VERSION}`}
+              >
+                v{APP_VERSION}
+              </span>
               {docName && (
                 <span className="hidden xl:inline-flex items-center gap-1 rounded-md border border-neutral-200/90 bg-neutral-100/80 px-2 py-0.5 text-[11px] font-mono text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800/80 dark:text-neutral-300">
                   <FileText className="h-3 w-3" />
