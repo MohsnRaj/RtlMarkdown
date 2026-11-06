@@ -1,5 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import ReactMarkdown from 'react-markdown';
@@ -297,6 +298,43 @@ describe('BiDi Utility Engine Tests', () => {
   });
 
   describe('normalizeMathDelimiters (LaTeX math delimiter normalization)', () => {
+    it('puts standalone compact dollar display delimiters on separate lines', () => {
+      for (const formula of ['x_k=d_k-\\tau.', 'Y_k=C-B_k,\\qquad\nY_k=\\min\\{2C,(Y_{k-1}+x_k)^+\\}.']) {
+        const input = `متن قبل:\n\n$$${formula}$$\n\nمتن بعد.`;
+        const expected = `متن قبل:\n\n$$\n${formula}\n$$\n\nمتن بعد.`;
+        const output = normalizeMathDelimiters(input);
+        assert.equal(output, expected);
+        assert.equal(normalizeMathDelimiters(output), output);
+      }
+    });
+
+    it('normalizes compact equations with CRLF, indentation, and trailing whitespace', () => {
+      const input = 'متن قبل:\r\n\r\n  $$Y_k=C-B_k,\r\nY_k=0.$$  \r\n\r\nمتن بعد.';
+      const expected = 'متن قبل:\r\n\r\n  $$\r\n  Y_k=C-B_k,\r\n  Y_k=0.\r\n  $$  \r\n\r\nمتن بعد.';
+      assert.equal(normalizeMathDelimiters(input), expected);
+      assert.equal(normalizeMathDelimiters(expected), expected);
+      assert.equal(normalizeMathDelimiters('متن\r\n$$x=1$$'), 'متن\r\n$$\r\nx=1\r\n$$');
+    });
+
+    it('preserves code, inline dollar math, and canonical display blocks', () => {
+      for (const input of [
+        'فرمول $x_k$ و $$x_k=1$$ در متن.',
+        '`$$x_k=1$$`',
+        '```latex\n$$x_k=1$$\n```',
+        '~~~latex\n$$Y_k=C-B_k,\nY_k=0.$$\n~~~',
+        '$$\nx_k=1\n$$',
+        '$$\nx_k=1\n\nY_k=0\n$$',
+        '$$\n  x_k=1  \n\nY_k=0\n$$',
+        '$$\r\n  x_k=1  \r\n$$',
+        '    $$x_k=1$$',
+        '$$$x_k=1$$$',
+        '\\$$x_k=1$$',
+        '$$x_k=1',
+      ]) {
+        assert.equal(normalizeMathDelimiters(input), input);
+      }
+    });
+
     it('normalizes LaTeX display math \\[ ... \\] to $$ ... $$', () => {
       const input = 'فرمول زیر برقرار است:\n\n\\[\nx_1,\\ x_2,\\ x_3\n\\]\n\nو ادامه متن.';
       const output = normalizeMathDelimiters(input);
@@ -382,6 +420,36 @@ describe('BiDi Utility Engine Tests', () => {
 });
 
 describe('RtlMarkdown BiDi Rendering Tests', () => {
+  it('keeps indented compact equations and following text inside their list item', () => {
+    const md = '- رابطه:\n\n  $$Y_k=C-B_k,\n  Y_k=0.$$\n\n  ادامهٔ توضیح.';
+    const html = renderMarkdown(md);
+    assert.equal((html.match(/class="katex-display"/g) || []).length, 1);
+    assert.match(html, /<li\b[^>]*>[\s\S]*class="katex-display"[\s\S]*ادامهٔ توضیح\.[\s\S]*<\/li>/);
+    assert.match(html, /<annotation encoding="application\/x-tex">Y_k=C-B_k,\n  Y_k=0\.<\/annotation>/);
+  });
+
+  it('renders the full bank-capacity lesson without swallowing formulas or following sections', () => {
+    const md = readFileSync(new URL('./fixtures/bank-capacity.fa.md', import.meta.url), 'utf8');
+    const html = renderMarkdown(md);
+    const displayFormulas = [...md.matchAll(/\$\$([\s\S]*?)\$\$/g)].map((match) => match[1]);
+    const inlineFormulas = [...md.matchAll(/(?<!\$)\$(?!\$)([^$]+)\$(?!\$)/g)].map((match) => match[1]);
+
+    assert.equal(displayFormulas.length, 7);
+    assert.equal((html.match(/class="katex-display"/g) || []).length, displayFormulas.length);
+    assert.equal((html.match(/class="katex"/g) || []).length, displayFormulas.length + inlineFormulas.length);
+    for (const formula of [...displayFormulas, ...inlineFormulas]) {
+      const annotation = renderToStaticMarkup(React.createElement('annotation', { encoding: 'application/x-tex' }, formula));
+      assert.ok(html.includes(annotation), `Missing formula: ${formula}`);
+    }
+    for (const id of ['lesson-11', 'lesson-12', 'lesson-13']) {
+      assert.match(html, new RegExp(`<a id="${id}"></a>`));
+    }
+    assert.equal((html.match(/<h2\b/g) || []).length, 3);
+    assert.equal((html.match(/<li\b/g) || []).length, 9);
+    assert.doesNotMatch(html, /katex-error|\$\$|language-math/);
+    assert.match(html, /<bdi[^>]*dir="ltr"[^>]*>PC1<\/bdi>/);
+  });
+
   it('aligns Persian GFM table cells by their content despite left alignment markers', () => {
     const md = `| بخش چکیده | ترجمه و محتوا | هدف و تطبیق با درخواست |
 | :--- | :--- | :--- |

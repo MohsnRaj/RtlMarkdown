@@ -285,8 +285,9 @@ function getNodeText(node: any): string {
  * Normalizes LaTeX math delimiters across a markdown document so that standard
  * LaTeX syntax (`\[ ... \]` for display math and `\( ... \)` for inline math)
  * is seamlessly converted into standard Markdown math syntax (`$$ ... $$` and `$ ... $`)
- * recognized by remark-math and KaTeX, while strictly preserving code blocks,
- * inline code, and existing math delimiters.
+ * recognized by remark-math and KaTeX. Standalone `$$...$$` equations also get
+ * delimiter-only lines so remark-math cannot mistake the first formula line for
+ * fence metadata. Code blocks, inline code, and inline dollar math are preserved.
  */
 export function normalizeMathDelimiters(content: string): string {
   if (!content) return '';
@@ -294,6 +295,7 @@ export function normalizeMathDelimiters(content: string): string {
   let result = '';
   let i = 0;
   const len = content.length;
+  const newline = content.includes('\r\n') ? '\r\n' : '\n';
 
   while (i < len) {
     // 1. Check for fenced code block at line start (or start of document)
@@ -360,7 +362,22 @@ export function normalizeMathDelimiters(content: string): string {
       const closeIdx = content.indexOf('$$', i + 2);
       if (closeIdx !== -1) {
         const endOfMath = closeIdx + 2;
-        result += content.slice(i, endOfMath);
+        const lineStart = content.lastIndexOf('\n', i - 1) + 1;
+        const nextNewline = content.indexOf('\n', endOfMath);
+        const lineEnd = nextNewline === -1 ? len : nextNewline;
+        const indent = content.slice(lineStart, i);
+        const isStandalone = /^ {0,3}$/.test(indent)
+          && /^[\t \r]*$/.test(content.slice(endOfMath, lineEnd));
+        const mathContent = content.slice(i + 2, closeIdx);
+        const hasDelimiterLines = /^[\t ]*\r?\n/.test(mathContent)
+          && /\r?\n[\t ]*$/.test(mathContent);
+
+        if (isStandalone && !hasDelimiterLines && mathContent.trim()) {
+          const formula = mathContent.trim().replace(/\r?\n/g, `${newline}${indent}`);
+          result += `$$${newline}${indent}${formula}${newline}${indent}$$`;
+        } else {
+          result += content.slice(i, endOfMath);
+        }
         i = endOfMath;
         continue;
       }
