@@ -3,6 +3,11 @@
 All notable changes to **RTL Markdown Studio** will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.4.1] - 2026-11-06
+
+### 🐛 Bug Fixes
+- fix(math): normalize compact display equations (fdcbebd)
+
 ## [v1.4.0] - 2026-10-29
 
 ### 🚀 Features
