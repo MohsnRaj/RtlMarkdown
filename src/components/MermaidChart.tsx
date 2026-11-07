@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useId } from 'react';
+import React, { useEffect, useState, useId } from 'react';
 import mermaid from 'mermaid';
 import { AlertCircle, Check, Copy } from 'lucide-react';
 
@@ -14,13 +14,51 @@ function initMermaid() {
   if (!mermaidInitialized && typeof window !== 'undefined') {
     mermaid.initialize({
       startOnLoad: false,
-      theme: 'default',
+      theme: 'base',
       securityLevel: 'loose',
-      fontFamily: 'var(--font-vazirmatn), system-ui, sans-serif',
-      fontSize: 14,
+      fontFamily: 'VazirmatnDiagram, Tahoma, sans-serif',
+      fontSize: 16,
+      themeVariables: {
+        primaryColor: '#eff6ff',
+        primaryTextColor: '#172554',
+        primaryBorderColor: '#93b4e8',
+        secondaryColor: '#f1f5f9',
+        secondaryTextColor: '#1e293b',
+        secondaryBorderColor: '#cbd5e1',
+        tertiaryColor: '#ffffff',
+        lineColor: '#64748b',
+        textColor: '#1e293b',
+        mainBkg: '#eff6ff',
+        nodeBorder: '#93b4e8',
+        clusterBkg: '#f8fafc',
+        clusterBorder: '#cbd5e1',
+        edgeLabelBackground: '#ffffff',
+        actorBkg: '#eff6ff',
+        actorBorder: '#93b4e8',
+        actorTextColor: '#172554',
+        signalColor: '#64748b',
+        signalTextColor: '#1e293b',
+        labelBoxBkgColor: '#f1f5f9',
+        labelBoxBorderColor: '#cbd5e1',
+        labelTextColor: '#1e293b',
+        noteBkgColor: '#fffbeb',
+        noteBorderColor: '#fcd34d',
+        noteTextColor: '#422006',
+      },
+      themeCSS: `
+        .nodeLabel, .edgeLabel, .label, .messageText, .noteText {
+          font-family: VazirmatnDiagram, Tahoma, sans-serif;
+          letter-spacing: 0;
+        }
+        .nodeLabel p, .edgeLabel p { unicode-bidi: plaintext; line-height: 1.7; }
+        .flowchart-link { stroke-width: 1.7px; }
+      `,
       flowchart: {
         htmlLabels: true,
-        curve: 'basis',
+        curve: 'linear',
+        nodeSpacing: 50,
+        rankSpacing: 60,
+        padding: 20,
       },
     });
     mermaidInitialized = true;
@@ -28,7 +66,6 @@ function initMermaid() {
 }
 
 export default function MermaidChart({ chart }: MermaidChartProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [svgContent, setSvgContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -42,10 +79,22 @@ export default function MermaidChart({ chart }: MermaidChartProps) {
       if (!chart.trim()) return;
       try {
         setError(null);
+        // Mermaid measures labels during rendering, so wait for the Persian font.
+        await document.fonts.load('16px VazirmatnDiagram');
         const renderId = `mermaid_svg_${uniqueId}_${Date.now()}`;
         const { svg } = await mermaid.render(renderId, chart.trim());
         if (isMounted) {
-          setSvgContent(svg);
+          const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+          const svgElement = doc.documentElement;
+          const viewBox = svgElement.getAttribute('viewBox')?.split(/[\s,]+/).map(Number);
+          if (viewBox?.length === 4 && viewBox[2] > 0) {
+            svgElement.setAttribute('width', String(viewBox[2]));
+            svgElement.style.maxWidth = 'none';
+          }
+          svgElement.querySelectorAll('foreignObject div').forEach((label) => {
+            label.setAttribute('dir', 'auto');
+          });
+          setSvgContent(new XMLSerializer().serializeToString(svgElement));
         }
       } catch (err: unknown) {
         if (isMounted) {
@@ -83,13 +132,14 @@ export default function MermaidChart({ chart }: MermaidChartProps) {
   }
 
   return (
-    <div className="mermaid-chart-card group relative my-6 rounded-2xl border border-neutral-200/80 bg-neutral-50/50 p-4 transition-all hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900/40">
-      <div className="no-print absolute top-3 start-3 z-10 flex items-center gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+    <div className="mermaid-chart-card group relative my-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700">
+      <div className="no-print absolute top-3 end-3 z-10 flex items-center gap-1.5">
         <button
           onClick={handleCopy}
           type="button"
           title="کپی کد نمودار"
-          className="rounded-lg border border-neutral-200 bg-white/90 p-1.5 text-neutral-600 shadow-sm backdrop-blur hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800/90 dark:text-neutral-300 dark:hover:bg-neutral-700"
+          aria-label={copied ? 'کد نمودار کپی شد' : 'کپی کد نمودار'}
+          className="rounded-lg border border-slate-200 bg-white/95 p-2 text-slate-500 shadow-sm transition hover:bg-slate-50 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
         >
           {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
         </button>
@@ -97,11 +147,11 @@ export default function MermaidChart({ chart }: MermaidChartProps) {
 
       {/* SVG Container strictly isolated to LTR layout so graphs don't invert */}
       <div
-        ref={containerRef}
         dir="ltr"
-        className="flex w-full justify-center overflow-x-auto py-2 text-center select-none [&_svg]:max-w-full [&_svg]:h-auto"
-        dangerouslySetInnerHTML={{ __html: svgContent }}
-      />
+        className="mermaid-chart-viewport w-full overflow-x-auto p-6 pt-12 text-center"
+      >
+        <div className="mermaid-chart-content" dangerouslySetInnerHTML={{ __html: svgContent }} />
+      </div>
     </div>
   );
 }

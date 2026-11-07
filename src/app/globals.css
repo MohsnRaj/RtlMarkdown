@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @import "katex/dist/katex.min.css";
 
+@font-face {
+  font-family: 'VazirmatnDiagram';
+  src: url('./fonts/Vazirmatn-Regular.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
@@ -76,6 +84,35 @@ body {
 /* Prose container */
 .rtl-markdown-prose {
   overflow-wrap: break-word;
+}
+
+/* Keep diagrams readable in both application themes and at their natural size. */
+.mermaid-chart-viewport {
+  direction: ltr;
+  unicode-bidi: isolate;
+  background-color: #fff;
+  background-image: radial-gradient(#e2e8f0 0.75px, transparent 0.75px);
+  background-size: 20px 20px;
+}
+
+.mermaid-chart-content {
+  width: max-content;
+  min-width: 100%;
+  margin-inline: auto;
+}
+
+.mermaid-chart-content svg {
+  display: block;
+  height: auto;
+  margin-inline: auto;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+@media print {
+  .mermaid-chart-viewport { background-image: none; }
+  .mermaid-chart-content { width: 100%; }
+  .mermaid-chart-content svg { max-width: 100% !important; }
 }
 
 /* Responsive Table Styling & Horizontal Scrollbar */
